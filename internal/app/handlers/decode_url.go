@@ -1,0 +1,18 @@
+package handlers
+
+import (
+	"github.com/ansedo/url-shortener/internal/app/shortener"
+	"github.com/go-chi/chi/v5"
+	"net/http"
+)
+
+func DecodeURL(shortener *shortener.Shortener) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		uri, err := shortener.Storage.Get(chi.URLParam(r, "id"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		http.Redirect(w, r, uri, http.StatusTemporaryRedirect)
+	}
+}
