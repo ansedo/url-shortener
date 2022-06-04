@@ -1,7 +1,7 @@
 package shortener
 
 import (
-	"github.com/ansedo/url-shortener/internal/app/storage"
+	"github.com/ansedo/url-shortener/internal/storage"
 	"strconv"
 )
 

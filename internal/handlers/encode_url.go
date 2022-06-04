@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"github.com/ansedo/url-shortener/internal/app/config"
-	"github.com/ansedo/url-shortener/internal/app/shortener"
+	"github.com/ansedo/url-shortener/internal/config"
+	"github.com/ansedo/url-shortener/internal/services/shortener"
 	"io"
 	"net/http"
 	"net/url"

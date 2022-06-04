@@ -1,10 +1,10 @@
 package handlers_test
 
 import (
-	"github.com/ansedo/url-shortener/internal/app/config"
-	"github.com/ansedo/url-shortener/internal/app/handlers"
-	"github.com/ansedo/url-shortener/internal/app/shortener"
-	"github.com/ansedo/url-shortener/internal/app/storage/memory"
+	"github.com/ansedo/url-shortener/internal/config"
+	"github.com/ansedo/url-shortener/internal/handlers"
+	"github.com/ansedo/url-shortener/internal/services/shortener"
+	"github.com/ansedo/url-shortener/internal/storage/memory"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

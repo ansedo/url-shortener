@@ -1,8 +1,8 @@
 package shortener_test
 
 import (
-	"github.com/ansedo/url-shortener/internal/app/shortener"
-	"github.com/ansedo/url-shortener/internal/app/storage/memory"
+	"github.com/ansedo/url-shortener/internal/services/shortener"
+	"github.com/ansedo/url-shortener/internal/storage/memory"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"

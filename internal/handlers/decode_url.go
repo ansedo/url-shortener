@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/ansedo/url-shortener/internal/app/shortener"
+	"github.com/ansedo/url-shortener/internal/services/shortener"
 	"github.com/go-chi/chi/v5"
 	"net/http"
 )
