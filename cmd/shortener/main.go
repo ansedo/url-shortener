@@ -21,5 +21,5 @@ func main() {
 	router.Post("/", handlers.EncodeURL(shortenerService))
 	router.Get("/{id}", handlers.DecodeURL(shortenerService))
 
-	log.Fatal(http.ListenAndServe(config.SitePort, router))
+	log.Fatal(http.ListenAndServe(config.NewConfig().SitePort, router))
 }

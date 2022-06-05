@@ -21,6 +21,7 @@ func TestEncodeURL(t *testing.T) {
 		location   string
 	}
 
+	cfg := config.NewConfig()
 	testRouter := chi.NewRouter()
 	testRouter.Post("/", handlers.EncodeURL(shortener.NewShortener()))
 
@@ -36,7 +37,7 @@ func TestEncodeURL(t *testing.T) {
 			body: "https://ya.ru",
 			want: want{
 				statusCode: http.StatusCreated,
-				body:       config.SiteAddress + "/0",
+				body:       cfg.SiteAddress + "/0",
 			},
 		},
 		{
@@ -45,7 +46,7 @@ func TestEncodeURL(t *testing.T) {
 			body: "://this url does not exist:8080",
 			want: want{
 				statusCode: http.StatusBadRequest,
-				body:       config.RequestNotAllowedError,
+				body:       cfg.RequestNotAllowedError,
 			},
 		},
 		{
@@ -54,7 +55,7 @@ func TestEncodeURL(t *testing.T) {
 			body: "",
 			want: want{
 				statusCode: http.StatusBadRequest,
-				body:       config.RequestNotAllowedError,
+				body:       cfg.RequestNotAllowedError,
 			},
 		},
 		{
@@ -63,7 +64,7 @@ func TestEncodeURL(t *testing.T) {
 			body: "https://google.com",
 			want: want{
 				statusCode: http.StatusCreated,
-				body:       config.SiteAddress + "/1",
+				body:       cfg.SiteAddress + "/1",
 			},
 		},
 	}
