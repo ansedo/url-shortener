@@ -4,7 +4,6 @@ import (
 	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/handlers"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
-	"github.com/ansedo/url-shortener/internal/storage/memory"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,8 +22,7 @@ func TestEncodeURL(t *testing.T) {
 	}
 
 	testRouter := chi.NewRouter()
-	testShortener := shortener.NewShortener(memory.NewStorage())
-	testRouter.Post("/", handlers.EncodeURL(testShortener))
+	testRouter.Post("/", handlers.EncodeURL(shortener.NewShortener()))
 
 	tests := []struct {
 		name string

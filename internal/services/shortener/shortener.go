@@ -9,10 +9,18 @@ type Shortener struct {
 	Storage storage.Storage
 }
 
-func NewShortener(storage storage.Storage) *Shortener {
-	return &Shortener{
-		Storage: storage,
+func NewShortener(opts ...Option) *Shortener {
+	s := &Shortener{}
+
+	for _, opt := range opts {
+		opt(s)
 	}
+
+	if s.Storage == nil {
+		WithMemoryStorage()(s)
+	}
+
+	return s
 }
 
 func (s *Shortener) GenerateID() (string, error) {

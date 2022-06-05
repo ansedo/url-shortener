@@ -2,7 +2,6 @@ package shortener_test
 
 import (
 	"github.com/ansedo/url-shortener/internal/services/shortener"
-	"github.com/ansedo/url-shortener/internal/storage/memory"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -10,7 +9,7 @@ import (
 
 func TestShortener(t *testing.T) {
 	testData := []string{"https://ya.ru", "https://google.com"}
-	testShortener := shortener.NewShortener(memory.NewStorage())
+	testShortener := shortener.NewShortener()
 
 	firstID, err := testShortener.GenerateID()
 	require.NoError(t, err)

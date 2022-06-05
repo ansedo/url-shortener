@@ -3,7 +3,6 @@ package handlers_test
 import (
 	"github.com/ansedo/url-shortener/internal/handlers"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
-	"github.com/ansedo/url-shortener/internal/storage/memory"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,13 +20,12 @@ func TestDecodeURL(t *testing.T) {
 	}
 
 	testRouter := chi.NewRouter()
-	testStorage := memory.NewStorage()
 	testData := map[string]string{"short-ya": "https://ya.ru", "short-google": "https://google.com"}
+	testShortener := shortener.NewShortener()
 	for key, value := range testData {
-		err := testStorage.Set(key, value)
+		err := testShortener.Storage.Set(key, value)
 		require.NoError(t, err)
 	}
-	testShortener := shortener.NewShortener(testStorage)
 	testRouter.Get("/{id}", handlers.DecodeURL(testShortener))
 
 	tests := []struct {
