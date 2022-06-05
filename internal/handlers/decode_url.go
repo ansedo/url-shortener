@@ -6,9 +6,9 @@ import (
 	"net/http"
 )
 
-func DecodeURL(shortener *shortener.Shortener) http.HandlerFunc {
+func DecodeURL(s *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		uri, err := shortener.Storage.Get(chi.URLParam(r, "id"))
+		uri, err := s.Storage.Get(chi.URLParam(r, "id"))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

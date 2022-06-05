@@ -19,14 +19,15 @@ func TestDecodeURL(t *testing.T) {
 		location   string
 	}
 
-	testRouter := chi.NewRouter()
-	testData := map[string]string{"short-ya": "https://ya.ru", "short-google": "https://google.com"}
-	testShortener := shortener.NewShortener()
-	for key, value := range testData {
-		err := testShortener.Storage.Set(key, value)
+	svc := shortener.NewShortener()
+	data := map[string]string{"short-ya": "https://ya.ru", "short-google": "https://google.com"}
+	for key, value := range data {
+		err := svc.Storage.Set(key, value)
 		require.NoError(t, err)
 	}
-	testRouter.Get("/{id}", handlers.DecodeURL(testShortener))
+
+	r := chi.NewRouter()
+	r.Get("/{id}", handlers.DecodeURL(svc))
 
 	tests := []struct {
 		name string
@@ -34,11 +35,11 @@ func TestDecodeURL(t *testing.T) {
 		want want
 	}{
 		{
-			name: "Decode: " + testData["short-ya"],
+			name: "Decode: " + data["short-ya"],
 			url:  "/short-ya",
 			want: want{
 				statusCode: http.StatusTemporaryRedirect,
-				location:   testData["short-ya"],
+				location:   data["short-ya"],
 			},
 		},
 		{
@@ -56,34 +57,34 @@ func TestDecodeURL(t *testing.T) {
 			},
 		},
 		{
-			name: "Decode: " + testData["short-google"],
+			name: "Decode: " + data["short-google"],
 			url:  "/short-google",
 			want: want{
 				statusCode: http.StatusTemporaryRedirect,
-				location:   testData["short-google"],
+				location:   data["short-google"],
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			testServer := httptest.NewServer(testRouter)
+			s := httptest.NewServer(r)
 
-			testClient := testServer.Client()
-			testClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			c := s.Client()
+			c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
 			}
 
-			response, err := testClient.Get(testServer.URL + tt.url)
+			resp, err := c.Get(s.URL + tt.url)
 			require.NoError(t, err)
-			assert.Equal(t, tt.want.statusCode, response.StatusCode)
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 
-			_, err = io.ReadAll(response.Body)
-			defer response.Body.Close()
+			_, err = io.ReadAll(resp.Body)
+			defer resp.Body.Close()
 			assert.NoError(t, err)
 
 			if tt.want.location != "" {
-				assert.Equal(t, tt.want.location, response.Header.Get("Location"))
+				assert.Equal(t, tt.want.location, resp.Header.Get("Location"))
 			}
 		})
 	}

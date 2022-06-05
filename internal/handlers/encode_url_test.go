@@ -21,9 +21,9 @@ func TestEncodeURL(t *testing.T) {
 		location   string
 	}
 
+	r := chi.NewRouter()
+	r.Post("/", handlers.EncodeURL(shortener.NewShortener()))
 	cfg := config.NewConfig()
-	testRouter := chi.NewRouter()
-	testRouter.Post("/", handlers.EncodeURL(shortener.NewShortener()))
 
 	tests := []struct {
 		name string
@@ -71,23 +71,23 @@ func TestEncodeURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			testServer := httptest.NewServer(testRouter)
+			s := httptest.NewServer(r)
 
-			testClient := testServer.Client()
-			testClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			c := s.Client()
+			c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
 			}
 
-			response, err := testClient.Post(
-				testServer.URL+tt.url,
+			resp, err := c.Post(
+				s.URL+tt.url,
 				"text/plain; charset=utf8",
 				strings.NewReader(tt.body),
 			)
 			require.NoError(t, err)
-			assert.Equal(t, tt.want.statusCode, response.StatusCode)
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 
-			body, err := io.ReadAll(response.Body)
-			defer response.Body.Close()
+			body, err := io.ReadAll(resp.Body)
+			defer resp.Body.Close()
 			require.NoError(t, err)
 
 			assert.Equal(t, tt.want.body, strings.TrimSpace(string(body)))

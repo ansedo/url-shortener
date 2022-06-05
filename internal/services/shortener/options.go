@@ -2,7 +2,7 @@ package shortener
 
 import (
 	"github.com/ansedo/url-shortener/internal/config"
-	"github.com/ansedo/url-shortener/internal/storage/memory"
+	"github.com/ansedo/url-shortener/internal/storage/memoryStorage"
 )
 
 type Option func(s *Shortener)
@@ -21,7 +21,7 @@ func WithDefaultConfig() Option {
 
 func WithMemoryStorage() Option {
 	return func(s *Shortener) {
-		s.Storage = memory.NewStorage()
+		s.Storage = memoryStorage.NewStorage()
 	}
 }
 

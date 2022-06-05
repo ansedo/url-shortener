@@ -8,29 +8,29 @@ import (
 )
 
 func TestShortener(t *testing.T) {
-	testData := []string{"https://ya.ru", "https://google.com"}
-	testShortener := shortener.NewShortener()
+	svc := shortener.NewShortener()
+	data := []string{"https://ya.ru", "https://google.com"}
 
-	firstID, err := testShortener.GenerateID()
+	firstID, err := svc.GenerateID()
 	require.NoError(t, err)
 
-	err = testShortener.Storage.Set(firstID, testData[0])
+	err = svc.Storage.Set(firstID, data[0])
 	require.NoError(t, err)
 
-	secondID, err := testShortener.GenerateID()
+	secondID, err := svc.GenerateID()
 	require.NoError(t, err)
 
-	err = testShortener.Storage.Set(secondID, testData[1])
+	err = svc.Storage.Set(secondID, data[1])
 	require.NoError(t, err)
 
-	_, err = testShortener.GenerateID()
+	_, err = svc.GenerateID()
 	require.NoError(t, err)
 
-	firstValue, err := testShortener.Storage.Get(firstID)
+	firstValue, err := svc.Storage.Get(firstID)
 	require.NoError(t, err)
-	assert.Equal(t, firstValue, testData[0])
+	assert.Equal(t, firstValue, data[0])
 
-	secondValue, err := testShortener.Storage.Get(secondID)
+	secondValue, err := svc.Storage.Get(secondID)
 	require.NoError(t, err)
-	assert.Equal(t, secondValue, testData[1])
+	assert.Equal(t, secondValue, data[1])
 }

@@ -11,15 +11,15 @@ import (
 )
 
 func main() {
-	router := chi.NewRouter()
-	router.Use(middleware.RequestID)
-	router.Use(middleware.RealIP)
-	router.Use(middleware.Logger)
-	router.Use(middleware.Recoverer)
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
 
-	shortenerService := shortener.NewShortener()
-	router.Post("/", handlers.EncodeURL(shortenerService))
-	router.Get("/{id}", handlers.DecodeURL(shortenerService))
+	svc := shortener.NewShortener()
+	r.Post("/", handlers.EncodeURL(svc))
+	r.Get("/{id}", handlers.DecodeURL(svc))
 
-	log.Fatal(http.ListenAndServe(config.NewConfig().SitePort, router))
+	log.Fatal(http.ListenAndServe(config.NewConfig().SitePort, r))
 }

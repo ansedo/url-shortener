@@ -8,7 +8,7 @@ import (
 
 type Shortener struct {
 	Config  *config.Config
-	Storage storage.Storage
+	Storage storage.Storager
 }
 
 func NewShortener(opts ...Option) *Shortener {

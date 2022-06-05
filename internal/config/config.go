@@ -10,13 +10,13 @@ type Config struct {
 }
 
 func NewConfig() *Config {
-	config := &Config{
+	cfg := &Config{
 		SiteScheme: "https://",
 		SiteHost:   "localhost",
 		SitePort:   ":8080",
 
 		RequestNotAllowedError: "this request is not allowed",
 	}
-	config.SiteAddress = config.SiteScheme + config.SiteHost + config.SitePort
-	return config
+	cfg.SiteAddress = cfg.SiteScheme + cfg.SiteHost + cfg.SitePort
+	return cfg
 }
