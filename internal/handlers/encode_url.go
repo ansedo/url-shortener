@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
 	"io"
 	"net/http"
@@ -35,7 +36,7 @@ func EncodeURL(s *shortener.Shortener) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		_, err = w.Write([]byte(s.Config.SiteAddress + "/" + id))
+		_, err = fmt.Fprintf(w, s.Config.SiteAddress+"/"+id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
