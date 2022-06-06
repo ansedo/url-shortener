@@ -11,7 +11,7 @@ type Config struct {
 
 func NewConfig() *Config {
 	cfg := &Config{
-		SiteScheme: "https://",
+		SiteScheme: "http://",
 		SiteHost:   "localhost",
 		SitePort:   ":8080",
 
