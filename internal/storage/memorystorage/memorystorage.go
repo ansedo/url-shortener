@@ -42,7 +42,7 @@ func (s *Storage) Has(key string) bool {
 	return ok
 }
 
-func (s *Storage) Count() int {
+func (s *Storage) NextID() int {
 	s.RLock()
 	defer s.RUnlock()
 	return len(s.repo)

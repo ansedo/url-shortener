@@ -31,5 +31,5 @@ func NewShortener(opts ...Option) *Shortener {
 
 func (s *Shortener) GenerateID() (string, error) {
 	// Strong and tiny approach with extra short ids (at least for first 10 values) and no collisions!
-	return strconv.Itoa(s.Storage.Count()), nil
+	return strconv.Itoa(s.Storage.NextID()), nil
 }
