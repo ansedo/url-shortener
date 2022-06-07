@@ -1,25 +1,29 @@
 package main
 
 import (
-	"github.com/ansedo/url-shortener/internal/config"
-	"github.com/ansedo/url-shortener/internal/handlers"
-	"github.com/ansedo/url-shortener/internal/services/shortener"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"context"
+	"github.com/ansedo/url-shortener/internal/server"
 	"log"
-	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+)
+
+const (
+	waitShutdownServerMaxSeconds = 5
 )
 
 func main() {
-	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	srv := server.Run()
 
-	svc := shortener.NewShortener()
-	r.Post("/", handlers.EncodeURL(svc))
-	r.Get("/{id}", handlers.DecodeURL(svc))
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	<-stop
 
-	log.Fatal(http.ListenAndServe(config.NewConfig().SitePort, r))
+	ctx, cancel := context.WithTimeout(context.Background(), waitShutdownServerMaxSeconds*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal(err)
+	}
 }
