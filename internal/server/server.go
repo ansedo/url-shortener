@@ -18,7 +18,7 @@ const (
 
 func Run(ctx context.Context) error {
 	srv := &http.Server{
-		Addr:    config.NewConfig().SitePort,
+		Addr:    config.New().SitePort,
 		Handler: router.NewRouter(),
 	}
 

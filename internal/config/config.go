@@ -1,6 +1,12 @@
 package config
 
-type Config struct {
+import (
+	"sync"
+)
+
+var once sync.Once
+
+type config struct {
 	SiteScheme  string
 	SiteHost    string
 	SitePort    string
@@ -9,14 +15,26 @@ type Config struct {
 	RequestNotAllowedError string
 }
 
-func NewConfig() *Config {
-	cfg := &Config{
-		SiteScheme: "http://",
-		SiteHost:   "localhost",
-		SitePort:   ":8080",
+var instance *config
 
-		RequestNotAllowedError: "this request is not allowed",
+func New(opts ...Option) *config {
+	if instance == nil {
+		once.Do(
+			func() {
+				instance = &config{
+					SiteScheme: "http://",
+					SiteHost:   "localhost",
+					SitePort:   ":8080",
+
+					RequestNotAllowedError: "this request is not allowed",
+				}
+
+				for _, opt := range opts {
+					opt(instance)
+				}
+
+				instance.SiteAddress = instance.SiteScheme + instance.SiteHost + instance.SitePort
+			})
 	}
-	cfg.SiteAddress = cfg.SiteScheme + cfg.SiteHost + cfg.SitePort
-	return cfg
+	return instance
 }

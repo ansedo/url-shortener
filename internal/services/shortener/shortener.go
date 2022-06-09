@@ -1,13 +1,11 @@
 package shortener
 
 import (
-	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/storage"
 	"strconv"
 )
 
 type Shortener struct {
-	Config  *config.Config
 	Storage storage.Storager
 }
 
@@ -16,10 +14,6 @@ func NewShortener(opts ...Option) *Shortener {
 
 	for _, opt := range opts {
 		opt(s)
-	}
-
-	if s.Config == nil {
-		WithDefaultConfig()(s)
 	}
 
 	if s.Storage == nil {

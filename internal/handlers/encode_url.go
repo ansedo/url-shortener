@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
 	"io"
 	"net/http"
@@ -19,7 +20,7 @@ func EncodeURL(s *shortener.Shortener) http.HandlerFunc {
 
 		uri, err := url.ParseRequestURI(string(body))
 		if err != nil {
-			http.Error(w, s.Config.RequestNotAllowedError, http.StatusBadRequest)
+			http.Error(w, config.New().RequestNotAllowedError, http.StatusBadRequest)
 			return
 		}
 
@@ -36,7 +37,7 @@ func EncodeURL(s *shortener.Shortener) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		_, err = fmt.Fprintf(w, s.Config.SiteAddress+"/"+id)
+		_, err = fmt.Fprintf(w, config.New().SiteAddress+"/"+id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
