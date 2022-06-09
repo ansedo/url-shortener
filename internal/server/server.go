@@ -1,22 +1,13 @@
 package server
 
 import (
-	"context"
-	"errors"
 	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/router"
 	"log"
 	"net/http"
-	"time"
 )
 
-const (
-	shutdownTimeout = 5 * time.Second
-
-	gracefulShutdownMessage = "server gracefully finished"
-)
-
-func Run(ctx context.Context) error {
+func Run() *http.Server {
 	srv := &http.Server{
 		Addr:    config.New().SitePort,
 		Handler: router.New(),
@@ -28,14 +19,5 @@ func Run(ctx context.Context) error {
 		}
 	}()
 
-	<-ctx.Done()
-
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), shutdownTimeout)
-	defer shutdownCancel()
-
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		return err
-	}
-
-	return errors.New(gracefulShutdownMessage)
+	return srv
 }
