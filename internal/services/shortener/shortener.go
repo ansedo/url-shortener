@@ -9,7 +9,7 @@ type Shortener struct {
 	Storage storage.Storager
 }
 
-func NewShortener(opts ...Option) *Shortener {
+func New(opts ...Option) *Shortener {
 	s := &Shortener{}
 
 	for _, opt := range opts {

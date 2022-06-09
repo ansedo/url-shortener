@@ -8,7 +8,7 @@ import (
 )
 
 func TestShortener(t *testing.T) {
-	svc := shortener.NewShortener()
+	svc := shortener.New()
 	data := []string{"https://ya.ru", "https://google.com"}
 
 	firstID, err := svc.GenerateID()

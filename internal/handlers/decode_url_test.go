@@ -19,7 +19,7 @@ func TestDecodeURL(t *testing.T) {
 		location   string
 	}
 
-	svc := shortener.NewShortener()
+	svc := shortener.New()
 	data := map[string]string{"short-ya": "https://ya.ru", "short-google": "https://google.com"}
 	for key, value := range data {
 		err := svc.Storage.Set(key, value)

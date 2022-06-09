@@ -22,7 +22,7 @@ func TestEncodeURL(t *testing.T) {
 	}
 
 	r := chi.NewRouter()
-	r.Post("/", handlers.EncodeURL(shortener.NewShortener()))
+	r.Post("/", handlers.EncodeURL(shortener.New()))
 	cfg := config.New()
 
 	tests := []struct {

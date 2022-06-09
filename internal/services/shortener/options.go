@@ -8,7 +8,7 @@ type Option func(s *Shortener)
 
 func WithMemoryStorage() Option {
 	return func(s *Shortener) {
-		s.Storage = memorystorage.NewStorage()
+		s.Storage = memorystorage.New()
 	}
 }
 

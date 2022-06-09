@@ -10,7 +10,7 @@ type Storage struct {
 	repo map[string]string
 }
 
-func NewStorage() *Storage {
+func New() *Storage {
 	return &Storage{
 		repo: make(map[string]string),
 	}
