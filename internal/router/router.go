@@ -17,6 +17,7 @@ func New() chi.Router {
 	svc := shortener.New()
 	r.Post("/", handlers.EncodeURL(svc))
 	r.Get("/{id}", handlers.DecodeURL(svc))
+	r.Post("/api/shorten", handlers.EncodeURLFromJSON(svc))
 
 	return r
 }
