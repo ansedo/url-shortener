@@ -14,6 +14,12 @@ func WithServerAddress(serverAddress string) Option {
 	}
 }
 
+func WithFileStoragePath(fileStoragePath string) Option {
+	return func(cfg *config) {
+		cfg.FileStoragePath = fileStoragePath
+	}
+}
+
 func WithRequestNotAllowedError(requestNotAllowedError string) Option {
 	return func(cfg *config) {
 		cfg.RequestNotAllowedError = requestNotAllowedError

@@ -1,12 +1,13 @@
 package shortener
 
 import (
-	"github.com/ansedo/url-shortener/internal/storage"
+	"github.com/ansedo/url-shortener/internal/config"
+	"github.com/ansedo/url-shortener/internal/storages"
 	"strconv"
 )
 
 type Shortener struct {
-	Storage storage.Storager
+	Storage storages.Storager
 }
 
 func New(opts ...Option) *Shortener {
@@ -14,6 +15,10 @@ func New(opts ...Option) *Shortener {
 
 	for _, opt := range opts {
 		opt(s)
+	}
+
+	if s.Storage == nil && config.New().FileStoragePath != "" {
+		WithFileStorage()(s)
 	}
 
 	if s.Storage == nil {
