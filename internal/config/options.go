@@ -2,21 +2,15 @@ package config
 
 type Option func(c *config)
 
-func WithSiteScheme(siteScheme string) Option {
+func WithBaseURL(baseURL string) Option {
 	return func(cfg *config) {
-		cfg.SiteScheme = siteScheme
+		cfg.BaseURL = baseURL
 	}
 }
 
-func WithSiteHost(siteHost string) Option {
+func WithServerAddress(serverAddress string) Option {
 	return func(cfg *config) {
-		cfg.SiteHost = siteHost
-	}
-}
-
-func WithSitePort(sitePort string) Option {
-	return func(cfg *config) {
-		cfg.SitePort = sitePort
+		cfg.ServerAddress = serverAddress
 	}
 }
 

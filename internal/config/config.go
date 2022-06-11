@@ -1,18 +1,17 @@
 package config
 
 import (
+	"github.com/caarlos0/env/v6"
+	"log"
 	"sync"
 )
 
 var once sync.Once
 
 type config struct {
-	SiteScheme  string
-	SiteHost    string
-	SitePort    string
-	SiteAddress string
-
-	RequestNotAllowedError string
+	BaseURL                string `env:"BASE_URL" envDefault:"http://localhost:8080"`
+	ServerAddress          string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
+	RequestNotAllowedError string `env:"REQUEST_NOT_ALLOWED_ERROR" envDefault:"this request is not allowed"`
 }
 
 var instance *config
@@ -21,19 +20,15 @@ func New(opts ...Option) *config {
 	if instance == nil {
 		once.Do(
 			func() {
-				instance = &config{
-					SiteScheme: "http://",
-					SiteHost:   "localhost",
-					SitePort:   ":8080",
-
-					RequestNotAllowedError: "this request is not allowed",
+				instance = &config{}
+				err := env.Parse(instance)
+				if err != nil {
+					log.Fatal(err)
 				}
 
 				for _, opt := range opts {
 					opt(instance)
 				}
-
-				instance.SiteAddress = instance.SiteScheme + instance.SiteHost + instance.SitePort
 			})
 	}
 	return instance

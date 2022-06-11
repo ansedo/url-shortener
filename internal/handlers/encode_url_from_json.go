@@ -56,7 +56,7 @@ func EncodeURLFromJSON(s *shortener.Shortener) http.HandlerFunc {
 			return
 		}
 
-		resp, err := json.Marshal(&response{Result: config.New().SiteAddress + "/" + id})
+		resp, err := json.Marshal(&response{Result: config.New().BaseURL + "/" + id})
 		if err != nil {
 			writeBadRequestErrorJSON(w, err.Error())
 			return

@@ -37,7 +37,7 @@ func EncodeURL(s *shortener.Shortener) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		_, err = fmt.Fprintf(w, config.New().SiteAddress+"/"+id)
+		_, err = fmt.Fprintf(w, config.New().BaseURL+"/"+id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
