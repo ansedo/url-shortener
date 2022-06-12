@@ -25,10 +25,10 @@ func New() *Storage {
 
 func (s *Storage) Get(key string) (string, error) {
 	consumer, err := NewConsumer(s.fileName)
-	defer consumer.Close()
 	if err != nil {
 		return "", err
 	}
+	defer consumer.Close()
 	for {
 		record, err := consumer.ReadRecord()
 		if err == io.EOF {
@@ -49,10 +49,10 @@ func (s *Storage) Set(key, value string) error {
 		return errors.New("this key already exists")
 	}
 	producer, err := NewProducer(s.fileName)
-	defer producer.Close()
 	if err != nil {
 		return err
 	}
+	defer producer.Close()
 	err = producer.WriteRecord(&Record{ID: key, URL: value})
 	if err != nil {
 		return err
@@ -62,10 +62,10 @@ func (s *Storage) Set(key, value string) error {
 
 func (s *Storage) Has(key string) bool {
 	consumer, err := NewConsumer(s.fileName)
-	defer consumer.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer consumer.Close()
 	for {
 		record, err := consumer.ReadRecord()
 		if err == io.EOF {
@@ -83,10 +83,10 @@ func (s *Storage) Has(key string) bool {
 
 func (s *Storage) NextID() int {
 	consumer, err := NewConsumer(s.fileName)
-	defer consumer.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer consumer.Close()
 
 	record, err := consumer.ReadLastRecord()
 	if err != nil {
