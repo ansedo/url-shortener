@@ -63,7 +63,7 @@ func EncodeURLFromJSON(s *shortener.Shortener) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		_, err = fmt.Fprintf(w, string(resp))
+		_, err = fmt.Fprint(w, string(resp))
 		if err != nil {
 			writeBadRequestErrorJSON(w, err.Error())
 			return
