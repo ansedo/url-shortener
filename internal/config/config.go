@@ -1,6 +1,7 @@
 package config
 
 import (
+	"flag"
 	"github.com/caarlos0/env/v6"
 	"log"
 	"sync"
@@ -21,15 +22,22 @@ func New(opts ...Option) *config {
 	if instance == nil {
 		once.Do(
 			func() {
-				instance = &config{}
-				err := env.Parse(instance)
+				var cfg config
+				err := env.Parse(&cfg)
 				if err != nil {
 					log.Fatal(err)
 				}
 
+				flag.StringVar(&cfg.ServerAddress, "a", cfg.ServerAddress, `server address to listen on`)
+				flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, `basic URL of resulting shortened URL`)
+				flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, `location to store data in`)
+				flag.Parse()
+
 				for _, opt := range opts {
-					opt(instance)
+					opt(&cfg)
 				}
+
+				instance = &cfg
 			})
 	}
 	return instance
