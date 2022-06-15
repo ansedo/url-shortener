@@ -39,7 +39,7 @@ func TestEncodeURLFromJSON(t *testing.T) {
 			body: `{"url":"--///this url does not_exist%8080"}`,
 			want: want{
 				statusCode: http.StatusBadRequest,
-				body:       fmt.Sprintf(`{"error":"%s"}`, config.New().RequestNotAllowedError),
+				body:       fmt.Sprintf(`{"error":"%s"}`, handlers.ErrRequestNotAllowed.Error()),
 			},
 		},
 		{
@@ -47,7 +47,7 @@ func TestEncodeURLFromJSON(t *testing.T) {
 			body: `{"url": ""}`,
 			want: want{
 				statusCode: http.StatusBadRequest,
-				body:       fmt.Sprintf(`{"error":"%s"}`, config.New().RequestNotAllowedError),
+				body:       fmt.Sprintf(`{"error":"%s"}`, handlers.ErrRequestNotAllowed.Error()),
 			},
 		},
 		{

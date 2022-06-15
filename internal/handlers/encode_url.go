@@ -20,7 +20,7 @@ func EncodeURL(s *shortener.Shortener) http.HandlerFunc {
 
 		uri, err := url.ParseRequestURI(string(body))
 		if err != nil {
-			http.Error(w, config.New().RequestNotAllowedError, http.StatusBadRequest)
+			http.Error(w, ErrRequestNotAllowed.Error(), http.StatusBadRequest)
 			return
 		}
 

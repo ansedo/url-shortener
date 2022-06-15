@@ -10,10 +10,9 @@ import (
 var once sync.Once
 
 type config struct {
-	BaseURL                string `env:"BASE_URL" envDefault:"http://localhost:8080"`
-	ServerAddress          string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
-	FileStoragePath        string `env:"FILE_STORAGE_PATH"`
-	RequestNotAllowedError string `env:"REQUEST_NOT_ALLOWED_ERROR" envDefault:"this request is not allowed"`
+	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080"`
+	ServerAddress   string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
+	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 }
 
 var instance *config

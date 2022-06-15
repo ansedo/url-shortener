@@ -40,7 +40,7 @@ func EncodeURLFromJSON(s *shortener.Shortener) http.HandlerFunc {
 
 		uri, err := url.ParseRequestURI(req.URL)
 		if err != nil {
-			writeBadRequestErrorJSON(w, config.New().RequestNotAllowedError)
+			writeBadRequestErrorJSON(w, ErrRequestNotAllowed.Error())
 			return
 		}
 

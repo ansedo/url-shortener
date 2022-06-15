@@ -19,9 +19,3 @@ func WithFileStoragePath(fileStoragePath string) Option {
 		cfg.FileStoragePath = fileStoragePath
 	}
 }
-
-func WithRequestNotAllowedError(requestNotAllowedError string) Option {
-	return func(cfg *config) {
-		cfg.RequestNotAllowedError = requestNotAllowedError
-	}
-}

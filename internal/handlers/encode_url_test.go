@@ -46,7 +46,7 @@ func TestEncodeURL(t *testing.T) {
 			body: "://this url does not exist:8080",
 			want: want{
 				statusCode: http.StatusBadRequest,
-				body:       cfg.RequestNotAllowedError,
+				body:       handlers.ErrRequestNotAllowed.Error(),
 			},
 		},
 		{
@@ -55,7 +55,7 @@ func TestEncodeURL(t *testing.T) {
 			body: "",
 			want: want{
 				statusCode: http.StatusBadRequest,
-				body:       cfg.RequestNotAllowedError,
+				body:       handlers.ErrRequestNotAllowed.Error(),
 			},
 		},
 		{
