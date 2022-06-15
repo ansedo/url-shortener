@@ -17,27 +17,30 @@ type config struct {
 
 var instance *config
 
+func load(opts ...Option) func() {
+	return func() {
+		var cfg config
+		err := env.Parse(&cfg)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		flag.StringVar(&cfg.ServerAddress, "a", cfg.ServerAddress, `server address to listen on`)
+		flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, `basic URL of resulting shortened URL`)
+		flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, `file location to store data in`)
+		flag.Parse()
+
+		for _, opt := range opts {
+			opt(&cfg)
+		}
+
+		instance = &cfg
+	}
+}
+
 func New(opts ...Option) *config {
 	if instance == nil {
-		once.Do(
-			func() {
-				var cfg config
-				err := env.Parse(&cfg)
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				flag.StringVar(&cfg.ServerAddress, "a", cfg.ServerAddress, `server address to listen on`)
-				flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, `basic URL of resulting shortened URL`)
-				flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, `location to store data in`)
-				flag.Parse()
-
-				for _, opt := range opts {
-					opt(&cfg)
-				}
-
-				instance = &cfg
-			})
+		once.Do(load(opts...))
 	}
 	return instance
 }
