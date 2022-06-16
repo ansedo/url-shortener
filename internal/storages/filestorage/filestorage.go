@@ -19,7 +19,7 @@ type Record struct {
 
 func New() *Storage {
 	return &Storage{
-		fileName: config.New().FileStoragePath,
+		fileName: config.Get("FileStoragePath"),
 	}
 }
 

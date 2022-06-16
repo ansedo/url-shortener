@@ -23,7 +23,6 @@ func TestEncodeURL(t *testing.T) {
 
 	r := chi.NewRouter()
 	r.Post("/", handlers.EncodeURL(shortener.New()))
-	cfg := config.New()
 
 	tests := []struct {
 		name string
@@ -37,7 +36,7 @@ func TestEncodeURL(t *testing.T) {
 			body: "https://ya.ru",
 			want: want{
 				statusCode: http.StatusCreated,
-				body:       cfg.BaseURL + "/0",
+				body:       config.Get("BaseURL") + "/0",
 			},
 		},
 		{
@@ -64,7 +63,7 @@ func TestEncodeURL(t *testing.T) {
 			body: "https://google.com",
 			want: want{
 				statusCode: http.StatusCreated,
-				body:       cfg.BaseURL + "/1",
+				body:       config.Get("BaseURL") + "/1",
 			},
 		},
 	}
