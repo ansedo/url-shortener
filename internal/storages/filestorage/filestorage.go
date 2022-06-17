@@ -1,8 +1,8 @@
 package filestorage
 
 import (
-	"errors"
 	"github.com/ansedo/url-shortener/internal/config"
+	"github.com/ansedo/url-shortener/internal/storages"
 	"io"
 	"log"
 	"strconv"
@@ -41,12 +41,12 @@ func (s *Storage) Get(key string) (string, error) {
 			return record.URL, nil
 		}
 	}
-	return "", errors.New("this key does not exist")
+	return "", storages.ErrKeyNotExist
 }
 
 func (s *Storage) Set(key, value string) error {
 	if s.Has(key) {
-		return errors.New("this key already exists")
+		return storages.ErrKeyAlreadyExists
 	}
 	producer, err := NewProducer(s.fileName)
 	if err != nil {

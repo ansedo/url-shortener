@@ -1,7 +1,7 @@
 package memorystorage
 
 import (
-	"errors"
+	"github.com/ansedo/url-shortener/internal/storages"
 	"sync"
 )
 
@@ -18,7 +18,7 @@ func New() *Storage {
 
 func (s *Storage) Get(key string) (string, error) {
 	if !s.Has(key) {
-		return "", errors.New("this key does not exist")
+		return "", storages.ErrKeyNotExist
 	}
 	s.RLock()
 	defer s.RUnlock()
@@ -27,7 +27,7 @@ func (s *Storage) Get(key string) (string, error) {
 
 func (s *Storage) Set(key, value string) error {
 	if s.Has(key) {
-		return errors.New("this key already exists")
+		return storages.ErrKeyAlreadyExists
 	}
 	s.Lock()
 	defer s.Unlock()
