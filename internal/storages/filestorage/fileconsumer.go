@@ -24,11 +24,11 @@ func NewConsumer(fileName string) (*consumer, error) {
 }
 
 func (c *consumer) ReadRecord() (*Record, error) {
-	record := &Record{}
+	var record Record
 	if err := c.decoder.Decode(&record); err != nil {
 		return nil, err
 	}
-	return record, nil
+	return &record, nil
 }
 
 func (c *consumer) ReadLastRecord() (*Record, error) {
@@ -71,12 +71,11 @@ func (c *consumer) ReadLastRecord() (*Record, error) {
 		return nil, nil
 	}
 
-	record := &Record{}
-	err = json.Unmarshal([]byte(line), &record)
-	if err != nil {
+	var record Record
+	if err = json.Unmarshal([]byte(line), &record); err != nil {
 		return nil, err
 	}
-	return record, nil
+	return &record, nil
 }
 
 func (c *consumer) Close() error {
