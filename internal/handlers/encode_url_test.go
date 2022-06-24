@@ -36,7 +36,7 @@ func TestEncodeURL(t *testing.T) {
 			body: "https://ya.ru",
 			want: want{
 				statusCode: http.StatusCreated,
-				body:       config.Get("BaseURL") + "/0",
+				body:       config.Get("BaseURL") + "/VRb8948o",
 			},
 		},
 		{
@@ -63,7 +63,7 @@ func TestEncodeURL(t *testing.T) {
 			body: "https://google.com",
 			want: want{
 				statusCode: http.StatusCreated,
-				body:       config.Get("BaseURL") + "/1",
+				body:       config.Get("BaseURL") + "/65lvAYxL",
 			},
 		},
 	}
