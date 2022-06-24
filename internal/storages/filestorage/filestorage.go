@@ -1,11 +1,11 @@
 package filestorage
 
 import (
+	"errors"
 	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/storages"
 	"io"
 	"log"
-	"strconv"
 )
 
 type Storage struct {
@@ -31,7 +31,7 @@ func (s *Storage) Get(key string) (string, error) {
 	defer consumer.Close()
 	for {
 		record, err := consumer.ReadRecord()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
@@ -68,7 +68,7 @@ func (s *Storage) Has(key string) bool {
 	defer consumer.Close()
 	for {
 		record, err := consumer.ReadRecord()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
@@ -87,20 +87,16 @@ func (s *Storage) NextID() int {
 		log.Fatal(err)
 	}
 	defer consumer.Close()
-
-	record, err := consumer.ReadLastRecord()
-	if err != nil {
-		log.Fatal(err)
+	var nextID int
+	for {
+		if _, err := consumer.ReadRecord(); err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			log.Fatal(err)
+		}
+		nextID++
 	}
-
-	if record == nil {
-		return 0
-	}
-
-	nextID, err := strconv.Atoi(record.ID)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	log.Println(nextID)
 	return nextID + 1
 }
