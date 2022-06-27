@@ -3,7 +3,7 @@ package filestorage
 import (
 	"errors"
 	"github.com/ansedo/url-shortener/internal/config"
-	. "github.com/ansedo/url-shortener/internal/helpers"
+	"github.com/ansedo/url-shortener/internal/helpers"
 	"github.com/ansedo/url-shortener/internal/storages"
 	"io"
 	"log"
@@ -25,7 +25,7 @@ func New() *Storage {
 }
 
 func (s *Storage) Get(key string) (string, error) {
-	consumer := Must(NewConsumer(s.fileName))
+	consumer := helpers.Must(NewConsumer(s.fileName))
 	defer consumer.Close()
 	for {
 		record, err := consumer.ReadRecord()
@@ -46,7 +46,7 @@ func (s *Storage) Set(key, value string) error {
 	if s.Has(key) {
 		return storages.ErrKeyAlreadyExists
 	}
-	producer := Must(NewProducer(s.fileName))
+	producer := helpers.Must(NewProducer(s.fileName))
 	defer producer.Close()
 	err := producer.WriteRecord(&Record{ID: key, URL: value})
 	if err != nil {
@@ -56,7 +56,7 @@ func (s *Storage) Set(key, value string) error {
 }
 
 func (s *Storage) Has(key string) bool {
-	consumer := Must(NewConsumer(s.fileName))
+	consumer := helpers.Must(NewConsumer(s.fileName))
 	defer consumer.Close()
 	for {
 		record, err := consumer.ReadRecord()
@@ -74,7 +74,7 @@ func (s *Storage) Has(key string) bool {
 }
 
 func (s *Storage) NextID() int {
-	consumer := Must(NewConsumer(s.fileName))
+	consumer := helpers.Must(NewConsumer(s.fileName))
 	defer consumer.Close()
 	var nextID int
 	for {
