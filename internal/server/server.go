@@ -9,7 +9,7 @@ import (
 
 func Run() *http.Server {
 	srv := &http.Server{
-		Addr:    config.Get("ServerAddress"),
+		Addr:    config.Get().ServerAddress,
 		Handler: router.New(),
 	}
 

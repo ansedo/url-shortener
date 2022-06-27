@@ -31,7 +31,7 @@ func TestEncodeURLFromJSON(t *testing.T) {
 			body: `{"url":"https://ya.ru"}`,
 			want: want{
 				statusCode: http.StatusCreated,
-				body:       fmt.Sprintf(`{"result":"%s/VRb8948o"}`, config.Get("BaseURL")),
+				body:       fmt.Sprintf(`{"result":"%s/VRb8948o"}`, config.Get().BaseURL),
 			},
 		},
 		{
@@ -55,7 +55,7 @@ func TestEncodeURLFromJSON(t *testing.T) {
 			body: `{"url":"https://google.com"}`,
 			want: want{
 				statusCode: http.StatusCreated,
-				body:       fmt.Sprintf(`{"result":"%s/65lvAYxL"}`, config.Get("BaseURL")),
+				body:       fmt.Sprintf(`{"result":"%s/65lvAYxL"}`, config.Get().BaseURL),
 			},
 		},
 	}

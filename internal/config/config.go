@@ -4,7 +4,6 @@ import (
 	"flag"
 	"github.com/caarlos0/env/v6"
 	"log"
-	"reflect"
 	"sync"
 )
 
@@ -43,14 +42,10 @@ func New(opts ...Option) {
 	once.Do(load(opts...))
 }
 
-func Get(field string) string {
+func Get() *config {
 	if instance == nil {
 		New()
 	}
 
-	if value := reflect.ValueOf(instance).Elem().FieldByName(field); value != (reflect.Value{}) {
-		return value.String()
-	}
-
-	return ""
+	return instance
 }
