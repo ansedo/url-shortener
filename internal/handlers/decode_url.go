@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
 	"github.com/go-chi/chi/v5"
 	"net/http"
@@ -13,7 +12,7 @@ func DecodeURL(s *shortener.Shortener) http.HandlerFunc {
 		id := chi.URLParam(r, "id")
 
 		if id == "" {
-			http.Error(w, config.New().RequestNotAllowedError, http.StatusBadRequest)
+			http.Error(w, ErrRequestNotAllowed.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -25,7 +24,7 @@ func DecodeURL(s *shortener.Shortener) http.HandlerFunc {
 
 		validURL, err := url.ParseRequestURI(storageURL)
 		if err != nil {
-			http.Error(w, config.New().RequestNotAllowedError, http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 

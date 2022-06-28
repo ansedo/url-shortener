@@ -1,12 +1,18 @@
 package shortener
 
 import (
-	"github.com/ansedo/url-shortener/internal/storage"
-	"strconv"
+	"github.com/ansedo/url-shortener/internal/config"
+	"github.com/ansedo/url-shortener/internal/storages"
+	"github.com/speps/go-hashids/v2"
+)
+
+const (
+	hashSalt   = "The Little Man Who Wasn't There"
+	hashLength = 8
 )
 
 type Shortener struct {
-	Storage storage.Storager
+	Storage storages.Storager
 }
 
 func New(opts ...Option) *Shortener {
@@ -14,6 +20,10 @@ func New(opts ...Option) *Shortener {
 
 	for _, opt := range opts {
 		opt(s)
+	}
+
+	if s.Storage == nil && config.Get().FileStoragePath != "" {
+		WithFileStorage()(s)
 	}
 
 	if s.Storage == nil {
@@ -24,6 +34,18 @@ func New(opts ...Option) *Shortener {
 }
 
 func (s *Shortener) GenerateID() (string, error) {
-	// Strong and tiny approach with extra short ids (at least for first 10 values) and no collisions!
-	return strconv.Itoa(s.Storage.NextID()), nil
+	d := hashids.NewData()
+	d.Salt = hashSalt
+	d.MinLength = hashLength
+	h, err := hashids.NewWithData(d)
+	if err != nil {
+		return "", err
+	}
+
+	id, err := h.Encode([]int{s.Storage.NextID()})
+	if err != nil {
+		return "", err
+	}
+
+	return id, nil
 }

@@ -20,7 +20,7 @@ func EncodeURL(s *shortener.Shortener) http.HandlerFunc {
 
 		uri, err := url.ParseRequestURI(string(body))
 		if err != nil {
-			http.Error(w, config.New().RequestNotAllowedError, http.StatusBadRequest)
+			http.Error(w, ErrRequestNotAllowed.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -37,7 +37,7 @@ func EncodeURL(s *shortener.Shortener) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		_, err = fmt.Fprintf(w, config.New().SiteAddress+"/"+id)
+		_, err = fmt.Fprintf(w, config.Get().BaseURL+"/"+id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

@@ -2,26 +2,20 @@ package config
 
 type Option func(c *config)
 
-func WithSiteScheme(siteScheme string) Option {
+func WithBaseURL(baseURL string) Option {
 	return func(cfg *config) {
-		cfg.SiteScheme = siteScheme
+		cfg.BaseURL = baseURL
 	}
 }
 
-func WithSiteHost(siteHost string) Option {
+func WithServerAddress(serverAddress string) Option {
 	return func(cfg *config) {
-		cfg.SiteHost = siteHost
+		cfg.ServerAddress = serverAddress
 	}
 }
 
-func WithSitePort(sitePort string) Option {
+func WithFileStoragePath(fileStoragePath string) Option {
 	return func(cfg *config) {
-		cfg.SitePort = sitePort
-	}
-}
-
-func WithRequestNotAllowedError(requestNotAllowedError string) Option {
-	return func(cfg *config) {
-		cfg.RequestNotAllowedError = requestNotAllowedError
+		cfg.FileStoragePath = fileStoragePath
 	}
 }

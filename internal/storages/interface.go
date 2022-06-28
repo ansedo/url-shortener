@@ -1,4 +1,4 @@
-package storage
+package storages
 
 type Storager interface {
 	Get(key string) (string, error)
