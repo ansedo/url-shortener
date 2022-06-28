@@ -9,7 +9,7 @@ import (
 	"net/url"
 )
 
-func EncodeURL(s *shortener.Shortener) http.HandlerFunc {
+func ShortenURL(s *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
@@ -24,13 +24,13 @@ func EncodeURL(s *shortener.Shortener) http.HandlerFunc {
 			return
 		}
 
-		id, err := s.GenerateID()
+		id, err := s.GenerateID(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		err = s.Storage.Set(id, uri.String())
+		err = s.Storage.Add(r.Context(), id, uri.String())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

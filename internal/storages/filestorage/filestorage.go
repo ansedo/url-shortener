@@ -1,9 +1,11 @@
 package filestorage
 
 import (
+	"context"
 	"errors"
 	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/helpers"
+	"github.com/ansedo/url-shortener/internal/models"
 	"github.com/ansedo/url-shortener/internal/storages"
 	"io"
 	"log"
@@ -14,8 +16,9 @@ type Storage struct {
 }
 
 type Record struct {
-	ID  string `json:"id"`
-	URL string `json:"url"`
+	UID         string `json:"uid"`
+	ShortURL    string `json:"short_url"`
+	OriginalURL string `json:"original_url"`
 }
 
 func New() *Storage {
@@ -24,7 +27,26 @@ func New() *Storage {
 	}
 }
 
-func (s *Storage) Get(key string) (string, error) {
+var _ storages.Storager = (*Storage)(nil)
+
+func (s *Storage) Add(ctx context.Context, shortURL, originalURL string) error {
+	if s.IsShortURLExist(ctx, shortURL) {
+		return storages.ErrKeyAlreadyExists
+	}
+	producer := helpers.Must(NewProducer(s.fileName))
+	defer producer.Close()
+	err := producer.WriteRecord(&Record{
+		UID:         helpers.GetUIDFromCtx(ctx),
+		ShortURL:    shortURL,
+		OriginalURL: originalURL,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Storage) GetByShortURL(_ context.Context, shortURL string) (string, error) {
 	consumer := helpers.Must(NewConsumer(s.fileName))
 	defer consumer.Close()
 	for {
@@ -35,27 +57,16 @@ func (s *Storage) Get(key string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		if record.ID == key {
-			return record.URL, nil
+		if record.ShortURL == shortURL {
+			return record.OriginalURL, nil
 		}
 	}
 	return "", storages.ErrKeyNotExist
 }
 
-func (s *Storage) Set(key, value string) error {
-	if s.Has(key) {
-		return storages.ErrKeyAlreadyExists
-	}
-	producer := helpers.Must(NewProducer(s.fileName))
-	defer producer.Close()
-	err := producer.WriteRecord(&Record{ID: key, URL: value})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *Storage) Has(key string) bool {
+func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenListResponse, error) {
+	entities := make([]models.ShortenListResponse, 0)
+	uid := helpers.GetUIDFromCtx(ctx)
 	consumer := helpers.Must(NewConsumer(s.fileName))
 	defer consumer.Close()
 	for {
@@ -66,14 +77,37 @@ func (s *Storage) Has(key string) bool {
 		if err != nil {
 			log.Fatal(err)
 		}
-		if record.ID == key {
+		if record.UID == uid {
+			entities = append(
+				entities,
+				models.ShortenListResponse{
+					ShortURL:    record.ShortURL,
+					OriginalURL: record.OriginalURL,
+				})
+		}
+	}
+	return entities, nil
+}
+
+func (s *Storage) IsShortURLExist(_ context.Context, shortURL string) bool {
+	consumer := helpers.Must(NewConsumer(s.fileName))
+	defer consumer.Close()
+	for {
+		record, err := consumer.ReadRecord()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		if record.ShortURL == shortURL {
 			return true
 		}
 	}
 	return false
 }
 
-func (s *Storage) NextID() int {
+func (s *Storage) NextID(_ context.Context) int {
 	consumer := helpers.Must(NewConsumer(s.fileName))
 	defer consumer.Close()
 	var nextID int
@@ -86,6 +120,5 @@ func (s *Storage) NextID() int {
 		}
 		nextID++
 	}
-	log.Println(nextID)
 	return nextID + 1
 }

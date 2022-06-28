@@ -16,11 +16,17 @@ func New() chi.Router {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Compress(5))
 	r.Use(middlewares.Decompress)
+	r.Use(middlewares.Cookie)
 
 	svc := shortener.New()
-	r.Post("/", handlers.EncodeURL(svc))
-	r.Get("/{id}", handlers.DecodeURL(svc))
-	r.Post("/api/shorten", handlers.EncodeURLFromJSON(svc))
+
+	r.Post("/", handlers.ShortenURL(svc))
+	r.Get("/{id}", handlers.GetOriginalURL(svc))
+
+	r.Route("/api", func(r chi.Router) {
+		r.Post("/shorten", handlers.APIShortenURL(svc))
+		r.Get("/user/urls", handlers.APIGetURLsByUID(svc))
+	})
 
 	return r
 }

@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"context"
 	"github.com/ansedo/url-shortener/internal/handlers"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
 	"github.com/go-chi/chi/v5"
@@ -12,22 +13,23 @@ import (
 	"testing"
 )
 
-func TestDecodeURL(t *testing.T) {
+func TestGetOriginalURL(t *testing.T) {
 	type want struct {
 		statusCode int
 		body       string
 		location   string
 	}
 
+	ctx := context.TODO()
 	svc := shortener.New()
 	data := map[string]string{"short-ya": "https://ya.ru", "short-google": "https://google.com"}
 	for key, value := range data {
-		err := svc.Storage.Set(key, value)
+		err := svc.Storage.Add(ctx, key, value)
 		require.NoError(t, err)
 	}
 
 	r := chi.NewRouter()
-	r.Get("/{id}", handlers.DecodeURL(svc))
+	r.Get("/{id}", handlers.GetOriginalURL(svc))
 
 	tests := []struct {
 		name string

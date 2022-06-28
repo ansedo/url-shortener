@@ -1,6 +1,7 @@
 package shortener
 
 import (
+	"context"
 	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/storages"
 	"github.com/speps/go-hashids/v2"
@@ -33,7 +34,7 @@ func New(opts ...Option) *Shortener {
 	return s
 }
 
-func (s *Shortener) GenerateID() (string, error) {
+func (s *Shortener) GenerateID(ctx context.Context) (string, error) {
 	d := hashids.NewData()
 	d.Salt = hashSalt
 	d.MinLength = hashLength
@@ -42,7 +43,7 @@ func (s *Shortener) GenerateID() (string, error) {
 		return "", err
 	}
 
-	id, err := h.Encode([]int{s.Storage.NextID()})
+	id, err := h.Encode([]int{s.Storage.NextID(ctx)})
 	if err != nil {
 		return "", err
 	}
