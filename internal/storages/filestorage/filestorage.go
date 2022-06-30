@@ -122,3 +122,7 @@ func (s *Storage) NextID(_ context.Context) int {
 	}
 	return nextID + 1
 }
+
+func (s *Storage) Ping(_ context.Context) error {
+	return nil
+}

@@ -15,7 +15,7 @@ type row struct {
 }
 
 type Storage struct {
-	sync.RWMutex
+	mu   sync.RWMutex
 	repo map[string]row
 }
 
@@ -31,8 +31,8 @@ func (s *Storage) Add(ctx context.Context, shortURL, originalURL string) error {
 	if s.IsShortURLExist(ctx, shortURL) {
 		return storages.ErrKeyAlreadyExists
 	}
-	s.Lock()
-	defer s.Unlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.repo[shortURL] = row{
 		UID:         helpers.GetUIDFromCtx(ctx),
 		OriginalURL: originalURL,
@@ -44,16 +44,16 @@ func (s *Storage) GetByShortURL(ctx context.Context, shortURL string) (string, e
 	if !s.IsShortURLExist(ctx, shortURL) {
 		return "", storages.ErrKeyNotExist
 	}
-	s.RLock()
-	defer s.RUnlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	return s.repo[shortURL].OriginalURL, nil
 }
 
 func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenListResponse, error) {
 	entities := make([]models.ShortenListResponse, 0)
 	uid := helpers.GetUIDFromCtx(ctx)
-	s.RLock()
-	defer s.RUnlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	for shortURL, row := range s.repo {
 		if row.UID == uid {
 			entities = append(
@@ -68,14 +68,18 @@ func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenListResponse, e
 }
 
 func (s *Storage) IsShortURLExist(_ context.Context, shortURL string) bool {
-	s.RLock()
-	defer s.RUnlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	_, ok := s.repo[shortURL]
 	return ok
 }
 
 func (s *Storage) NextID(_ context.Context) int {
-	s.RLock()
-	defer s.RUnlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	return len(s.repo)
+}
+
+func (s *Storage) Ping(_ context.Context) error {
+	return nil
 }

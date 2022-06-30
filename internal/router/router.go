@@ -22,6 +22,7 @@ func New() chi.Router {
 
 	r.Post("/", handlers.ShortenURL(svc))
 	r.Get("/{id}", handlers.GetOriginalURL(svc))
+	r.Get("/ping", handlers.PingDB(svc))
 
 	r.Route("/api", func(r chi.Router) {
 		r.Post("/shorten", handlers.APIShortenURL(svc))

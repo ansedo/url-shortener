@@ -12,4 +12,5 @@ type Storager interface {
 	GetByUID(ctx context.Context) ([]models.ShortenListResponse, error)
 	IsShortURLExist(ctx context.Context, shortURL string) bool
 	NextID(ctx context.Context) int
+	Ping(ctx context.Context) error
 }

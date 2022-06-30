@@ -23,6 +23,10 @@ func New(opts ...Option) *Shortener {
 		opt(s)
 	}
 
+	if s.Storage == nil && config.Get().DatabaseDSN != "" {
+		WithPostgreStorage()(s)
+	}
+
 	if s.Storage == nil && config.Get().FileStoragePath != "" {
 		WithFileStorage()(s)
 	}
