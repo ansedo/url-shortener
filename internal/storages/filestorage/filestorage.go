@@ -21,7 +21,7 @@ type Record struct {
 	OriginalURL string `json:"original_url"`
 }
 
-func New() *Storage {
+func New(_ context.Context) *Storage {
 	return &Storage{
 		fileName: config.Get().FileStoragePath,
 	}
@@ -31,7 +31,7 @@ var _ storages.Storager = (*Storage)(nil)
 
 func (s *Storage) Add(ctx context.Context, shortURL, originalURL string) error {
 	if s.IsShortURLExist(ctx, shortURL) {
-		return storages.ErrKeyAlreadyExists
+		return storages.ErrShortURLAlreadyExists
 	}
 	producer := helpers.Must(NewProducer(s.fileName))
 	defer producer.Close()
@@ -61,7 +61,7 @@ func (s *Storage) GetByShortURL(_ context.Context, shortURL string) (string, err
 			return record.OriginalURL, nil
 		}
 	}
-	return "", storages.ErrKeyNotExist
+	return "", storages.ErrShortURLNotExist
 }
 
 func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenListResponse, error) {

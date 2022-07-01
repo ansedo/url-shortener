@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"context"
 	"fmt"
 	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/handlers"
@@ -61,7 +62,7 @@ func TestAPIShortenURL(t *testing.T) {
 	}
 
 	r := chi.NewRouter()
-	r.Post("/", handlers.APIShortenURL(shortener.New()))
+	r.Post("/", handlers.APIShortenURL(shortener.New(context.Background())))
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

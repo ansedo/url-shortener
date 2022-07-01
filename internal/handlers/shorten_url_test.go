@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"context"
 	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/handlers"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
@@ -22,7 +23,7 @@ func TestShortenURL(t *testing.T) {
 	}
 
 	r := chi.NewRouter()
-	r.Post("/", handlers.ShortenURL(shortener.New()))
+	r.Post("/", handlers.ShortenURL(shortener.New(context.Background())))
 
 	tests := []struct {
 		name string

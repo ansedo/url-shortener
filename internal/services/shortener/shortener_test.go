@@ -9,8 +9,8 @@ import (
 )
 
 func TestShortener(t *testing.T) {
-	ctx := context.TODO()
-	svc := shortener.New()
+	ctx := context.Background()
+	svc := shortener.New(ctx)
 	data := []string{"https://ya.ru", "https://google.com"}
 
 	firstID, err := svc.GenerateID(ctx)

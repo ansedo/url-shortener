@@ -13,17 +13,17 @@ type Server struct {
 	http http.Server
 }
 
-func New() *Server {
+func New(ctx context.Context) *Server {
 	return &Server{
 		http: http.Server{
 			Addr:    config.Get().ServerAddress,
-			Handler: router.New(),
+			Handler: router.New(ctx),
 		},
 	}
 }
 
-func Run() {
-	srv := New()
+func Run(ctx context.Context) {
+	srv := New(ctx)
 	go srv.ListenAndServer()
 	srv.addToShutdowner()
 }

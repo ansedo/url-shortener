@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"github.com/ansedo/url-shortener/internal/handlers"
 	"github.com/ansedo/url-shortener/internal/middlewares"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
@@ -8,7 +9,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func New() chi.Router {
+func New(ctx context.Context) chi.Router {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -18,7 +19,7 @@ func New() chi.Router {
 	r.Use(middlewares.Decompress)
 	r.Use(middlewares.Cookie)
 
-	svc := shortener.New()
+	svc := shortener.New(ctx)
 
 	r.Post("/", handlers.ShortenURL(svc))
 	r.Get("/{id}", handlers.GetOriginalURL(svc))

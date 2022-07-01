@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"context"
 	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/handlers"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
@@ -18,7 +19,7 @@ func TestAPIGetURLsByUIDFetchURLs(t *testing.T) {
 	urls := []string{`https://ya.ru`, `https://google.com`}
 	contentType := "text/plain; charset=utf8"
 
-	svc := shortener.New()
+	svc := shortener.New(context.Background())
 	r := chi.NewRouter()
 	r.Post("/", handlers.ShortenURL(svc))
 	r.Get("/api/user/urls", handlers.APIGetURLsByUID(svc))
@@ -64,9 +65,10 @@ func TestAPIGetURLsByUIDFetchURLs(t *testing.T) {
 		assert.Contains(t, string(body), config.Get().BaseURL)
 	})
 }
+
 func TestAPIGetURLsByUIDFetchEmptyURLs(t *testing.T) {
 	r := chi.NewRouter()
-	r.Get("/api/user/urls", handlers.APIGetURLsByUID(shortener.New()))
+	r.Get("/api/user/urls", handlers.APIGetURLsByUID(shortener.New(context.Background())))
 	s := httptest.NewServer(r)
 	c := s.Client()
 

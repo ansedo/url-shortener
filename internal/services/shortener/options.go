@@ -1,6 +1,7 @@
 package shortener
 
 import (
+	"context"
 	"github.com/ansedo/url-shortener/internal/helpers"
 	"github.com/ansedo/url-shortener/internal/storages/filestorage"
 	"github.com/ansedo/url-shortener/internal/storages/memorystorage"
@@ -9,24 +10,24 @@ import (
 
 type Option func(s *Shortener)
 
-func WithMemoryStorage() Option {
+func WithMemoryStorage(ctx context.Context) Option {
 	return func(s *Shortener) {
-		s.Storage = memorystorage.New()
+		s.Storage = memorystorage.New(ctx)
 	}
 }
 
-func WithFileStorage() Option {
+func WithFileStorage(ctx context.Context) Option {
 	return func(s *Shortener) {
-		s.Storage = filestorage.New()
+		s.Storage = filestorage.New(ctx)
 	}
 }
 
-func WithPostgreStorage() Option {
+func WithPostgreStorage(ctx context.Context) Option {
 	return func(s *Shortener) {
-		s.Storage = helpers.Must(postgrestorage.New())
+		s.Storage = helpers.Must(postgrestorage.New(ctx))
 	}
 }
 
-func WithDefaultStorage() Option {
-	return WithMemoryStorage()
+func WithDefaultStorage(ctx context.Context) Option {
+	return WithMemoryStorage(ctx)
 }

@@ -19,7 +19,7 @@ type Storage struct {
 	repo map[string]row
 }
 
-func New() *Storage {
+func New(_ context.Context) *Storage {
 	return &Storage{
 		repo: make(map[string]row),
 	}
@@ -29,7 +29,7 @@ var _ storages.Storager = (*Storage)(nil)
 
 func (s *Storage) Add(ctx context.Context, shortURL, originalURL string) error {
 	if s.IsShortURLExist(ctx, shortURL) {
-		return storages.ErrKeyAlreadyExists
+		return storages.ErrShortURLAlreadyExists
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -42,7 +42,7 @@ func (s *Storage) Add(ctx context.Context, shortURL, originalURL string) error {
 
 func (s *Storage) GetByShortURL(ctx context.Context, shortURL string) (string, error) {
 	if !s.IsShortURLExist(ctx, shortURL) {
-		return "", storages.ErrKeyNotExist
+		return "", storages.ErrShortURLNotExist
 	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()

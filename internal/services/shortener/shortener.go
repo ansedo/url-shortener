@@ -16,7 +16,7 @@ type Shortener struct {
 	Storage storages.Storager
 }
 
-func New(opts ...Option) *Shortener {
+func New(ctx context.Context, opts ...Option) *Shortener {
 	s := &Shortener{}
 
 	for _, opt := range opts {
@@ -24,15 +24,15 @@ func New(opts ...Option) *Shortener {
 	}
 
 	if s.Storage == nil && config.Get().DatabaseDSN != "" {
-		WithPostgreStorage()(s)
+		WithPostgreStorage(ctx)(s)
 	}
 
 	if s.Storage == nil && config.Get().FileStoragePath != "" {
-		WithFileStorage()(s)
+		WithFileStorage(ctx)(s)
 	}
 
 	if s.Storage == nil {
-		WithDefaultStorage()(s)
+		WithDefaultStorage(ctx)(s)
 	}
 
 	return s

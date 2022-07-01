@@ -3,6 +3,6 @@ package storages
 import "errors"
 
 var (
-	ErrKeyAlreadyExists = errors.New("this key already exists")
-	ErrKeyNotExist      = errors.New("this key does not exist")
+	ErrShortURLAlreadyExists = errors.New("this short url already exists")
+	ErrShortURLNotExist      = errors.New("this short url does not exist")
 )

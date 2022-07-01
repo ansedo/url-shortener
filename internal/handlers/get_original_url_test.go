@@ -21,7 +21,7 @@ func TestGetOriginalURL(t *testing.T) {
 	}
 
 	ctx := context.TODO()
-	svc := shortener.New()
+	svc := shortener.New(context.Background())
 	data := map[string]string{"short-ya": "https://ya.ru", "short-google": "https://google.com"}
 	for key, value := range data {
 		err := svc.Storage.Add(ctx, key, value)
