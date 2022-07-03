@@ -3,6 +3,7 @@ package storages
 import "errors"
 
 var (
-	ErrShortURLIDAlreadyExists = errors.New("this short url id already exists")
-	ErrShortURLIDNotExist      = errors.New("this short url id does not exist")
+	ErrRowAlreadyExists     = errors.New("this row already exists")
+	ErrShortURLIDNotExist   = errors.New("this short url id does not exist")
+	ErrOriginalURLNotExists = errors.New("this original url does not exist")
 )

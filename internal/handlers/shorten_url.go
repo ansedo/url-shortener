@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
+	"github.com/ansedo/url-shortener/internal/storages"
 	"io"
 	"net/http"
 	"net/url"
@@ -17,30 +19,32 @@ func ShortenURL(s *shortener.Shortener) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		originalURL := string(body)
 
-		uri, err := url.ParseRequestURI(string(body))
-		if err != nil {
+		if _, err = url.ParseRequestURI(originalURL); err != nil {
 			http.Error(w, ErrRequestNotAllowed.Error(), http.StatusBadRequest)
 			return
 		}
 
-		id, err := s.GenerateID(r.Context())
+		shortURLID, err := s.GenerateID(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		err = s.Storage.Add(r.Context(), id, uri.String())
-		if err != nil {
+		if err = s.Storage.Add(r.Context(), shortURLID, originalURL); err != nil {
+			if errors.Is(err, storages.ErrRowAlreadyExists) {
+				if existsShortURLID, err := s.Storage.GetByOriginalURL(r.Context(), originalURL); err == nil {
+					w.WriteHeader(http.StatusConflict)
+					fmt.Fprintf(w, config.Get().BaseURL+"/"+existsShortURLID)
+					return
+				}
+			}
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		_, err = fmt.Fprintf(w, config.Get().BaseURL+"/"+id)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+		fmt.Fprintf(w, config.Get().BaseURL+"/"+shortURLID)
 	}
 }

@@ -7,8 +7,8 @@ import (
 	"github.com/ansedo/url-shortener/internal/helpers"
 	"github.com/ansedo/url-shortener/internal/models"
 	"github.com/ansedo/url-shortener/internal/storages"
+	"go.uber.org/zap"
 	"io"
-	"log"
 )
 
 type Storage struct {
@@ -30,8 +30,8 @@ func New(_ context.Context) *Storage {
 var _ storages.Storager = (*Storage)(nil)
 
 func (s *Storage) Add(ctx context.Context, shortURLID, originalURL string) error {
-	if s.IsShortURLIDExist(ctx, shortURLID) {
-		return storages.ErrShortURLIDAlreadyExists
+	if s.IsDuplicate(ctx, shortURLID, originalURL) {
+		return storages.ErrRowAlreadyExists
 	}
 	producer := helpers.Must(NewProducer(s.fileName))
 	defer producer.Close()
@@ -73,6 +73,24 @@ func (s *Storage) GetByShortURLID(_ context.Context, shortURLID string) (string,
 	return "", storages.ErrShortURLIDNotExist
 }
 
+func (s *Storage) GetByOriginalURL(_ context.Context, originalURL string) (string, error) {
+	consumer := helpers.Must(NewConsumer(s.fileName))
+	defer consumer.Close()
+	for {
+		record, err := consumer.ReadRecord()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			return "", err
+		}
+		if record.ShortURLID == originalURL {
+			return record.ShortURLID, nil
+		}
+	}
+	return "", storages.ErrOriginalURLNotExists
+}
+
 func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenList, error) {
 	entities := make([]models.ShortenList, 0)
 	uid := helpers.GetUIDFromCtx(ctx)
@@ -84,7 +102,7 @@ func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenList, error) {
 			break
 		}
 		if err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 		if record.UID == uid {
 			entities = append(
@@ -98,7 +116,7 @@ func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenList, error) {
 	return entities, nil
 }
 
-func (s *Storage) IsShortURLIDExist(_ context.Context, shortURLID string) bool {
+func (s *Storage) IsDuplicate(_ context.Context, shortURLID, originalURL string) bool {
 	consumer := helpers.Must(NewConsumer(s.fileName))
 	defer consumer.Close()
 	for {
@@ -107,10 +125,10 @@ func (s *Storage) IsShortURLIDExist(_ context.Context, shortURLID string) bool {
 			break
 		}
 		if err != nil {
-			log.Fatal(err)
+			zap.L().Fatal(err.Error())
 		}
-		if record.ShortURLID == shortURLID {
-			return true
+		if record.ShortURLID == shortURLID || record.OriginalURL == originalURL {
+			return false
 		}
 	}
 	return false
@@ -125,7 +143,7 @@ func (s *Storage) NextID(_ context.Context) int {
 			if errors.Is(err, io.EOF) {
 				break
 			}
-			log.Fatal(err)
+			zap.L().Fatal(err.Error())
 		}
 		nextID++
 	}

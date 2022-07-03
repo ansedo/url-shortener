@@ -5,7 +5,7 @@ import (
 	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/router"
 	"github.com/ansedo/url-shortener/internal/services/shutdowner"
-	"log"
+	"go.uber.org/zap"
 	"net/http"
 )
 
@@ -30,7 +30,7 @@ func Run(ctx context.Context) {
 
 func (s *Server) ListenAndServer() {
 	if err := s.http.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatal(err)
+		zap.L().Fatal(err.Error())
 	}
 }
 

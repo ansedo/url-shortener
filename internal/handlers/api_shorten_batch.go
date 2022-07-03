@@ -68,9 +68,7 @@ func APIShortenBatch(s *shortener.Shortener) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		_, err = fmt.Fprint(w, string(resp))
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+		if _, err = fmt.Fprint(w, string(resp)); err != nil {
 			json.NewEncoder(w).Encode(models.ShortenResponse{Error: err.Error()})
 			return
 		}

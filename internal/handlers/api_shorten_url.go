@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/models"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
+	"github.com/ansedo/url-shortener/internal/storages"
 	"io"
 	"net/http"
 	"net/url"
@@ -25,35 +27,39 @@ func APIShortenURL(s *shortener.Shortener) http.HandlerFunc {
 		}
 
 		req := &models.ShortenRequest{}
-		err = json.Unmarshal(body, &req)
-		if err != nil {
+		if err = json.Unmarshal(body, &req); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(models.ShortenResponse{Error: err.Error()})
 			return
 		}
 
-		uri, err := url.ParseRequestURI(req.URL)
-		if err != nil {
+		if _, err = url.ParseRequestURI(req.URL); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(models.ShortenResponse{Error: ErrRequestNotAllowed.Error()})
 			return
 		}
 
-		id, err := s.GenerateID(r.Context())
+		shortURLID, err := s.GenerateID(r.Context())
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(models.ShortenResponse{Error: err.Error()})
 			return
 		}
 
-		err = s.Storage.Add(r.Context(), id, uri.String())
-		if err != nil {
+		if err = s.Storage.Add(r.Context(), shortURLID, req.URL); err != nil {
+			if errors.Is(err, storages.ErrRowAlreadyExists) {
+				if existsShortURLID, err := s.Storage.GetByOriginalURL(r.Context(), req.URL); err == nil {
+					w.WriteHeader(http.StatusConflict)
+					json.NewEncoder(w).Encode(models.ShortenResponse{Result: config.Get().BaseURL + "/" + existsShortURLID})
+					return
+				}
+			}
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(models.ShortenResponse{Error: err.Error()})
 			return
 		}
 
-		resp, err := json.Marshal(&models.ShortenResponse{Result: config.Get().BaseURL + "/" + id})
+		resp, err := json.Marshal(&models.ShortenResponse{Result: config.Get().BaseURL + "/" + shortURLID})
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(models.ShortenResponse{Error: err.Error()})
@@ -61,9 +67,7 @@ func APIShortenURL(s *shortener.Shortener) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		_, err = fmt.Fprint(w, string(resp))
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+		if _, err = fmt.Fprint(w, string(resp)); err != nil {
 			json.NewEncoder(w).Encode(models.ShortenResponse{Error: err.Error()})
 			return
 		}

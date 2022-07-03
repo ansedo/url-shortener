@@ -27,8 +27,8 @@ func New(_ context.Context) *Storage {
 var _ storages.Storager = (*Storage)(nil)
 
 func (s *Storage) Add(ctx context.Context, shortURLID, originalURL string) error {
-	if s.IsShortURLIDExist(ctx, shortURLID) {
-		return storages.ErrShortURLIDAlreadyExists
+	if s.IsDuplicate(ctx, shortURLID, originalURL) {
+		return storages.ErrRowAlreadyExists
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -48,13 +48,25 @@ func (s *Storage) AddBatch(ctx context.Context, urls []models.ShortenList) error
 	return nil
 }
 
-func (s *Storage) GetByShortURLID(ctx context.Context, shortURLID string) (string, error) {
-	if !s.IsShortURLIDExist(ctx, shortURLID) {
-		return "", storages.ErrShortURLIDNotExist
-	}
+func (s *Storage) GetByShortURLID(_ context.Context, shortURLID string) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.repo[shortURLID].OriginalURL, nil
+	row, ok := s.repo[shortURLID]
+	if !ok {
+		return "", storages.ErrShortURLIDNotExist
+	}
+	return row.OriginalURL, nil
+}
+
+func (s *Storage) GetByOriginalURL(_ context.Context, originalURL string) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, row := range s.repo {
+		if row.OriginalURL == originalURL {
+			return originalURL, nil
+		}
+	}
+	return "", storages.ErrOriginalURLNotExists
 }
 
 func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenList, error) {
@@ -69,17 +81,21 @@ func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenList, error) {
 				models.ShortenList{
 					ShortURLID:  shortURLID,
 					OriginalURL: row.OriginalURL,
-				})
+				},
+			)
 		}
 	}
 	return shortenList, nil
 }
 
-func (s *Storage) IsShortURLIDExist(_ context.Context, shortURLID string) bool {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	_, ok := s.repo[shortURLID]
-	return ok
+func (s *Storage) IsDuplicate(ctx context.Context, shortURLID, originalURL string) bool {
+	if _, err := s.GetByShortURLID(ctx, shortURLID); err == nil {
+		return true
+	}
+	if _, err := s.GetByOriginalURL(ctx, originalURL); err == nil {
+		return true
+	}
+	return false
 }
 
 func (s *Storage) NextID(_ context.Context) int {

@@ -23,7 +23,7 @@ func New(ctx context.Context) chi.Router {
 
 	r.Post("/", handlers.ShortenURL(svc))
 	r.Get("/{id}", handlers.GetOriginalURL(svc))
-	r.Get("/ping", handlers.PingDB(svc))
+	r.Get("/ping", handlers.PingStorage(svc))
 
 	r.Route("/api", func(r chi.Router) {
 		r.Post("/shorten", handlers.APIShortenURL(svc))

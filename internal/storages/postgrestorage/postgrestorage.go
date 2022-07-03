@@ -12,8 +12,9 @@ import (
 	"github.com/ansedo/url-shortener/internal/services/shutdowner"
 	"github.com/ansedo/url-shortener/internal/storages"
 	"github.com/jackc/pgconn"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v4"
-	"log"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -36,11 +37,11 @@ func getQueryFromFile(filename string) (string, error) {
 type Storage struct {
 	db    *pgx.Conn
 	stmts struct {
-		insertInto             *pgconn.StatementDescription
-		selectByShortURLID     *pgconn.StatementDescription
-		selectByUID            *pgconn.StatementDescription
-		selectExistsShortURLID *pgconn.StatementDescription
-		selectMaxID            *pgconn.StatementDescription
+		insertInto          *pgconn.StatementDescription
+		selectByOriginalURL *pgconn.StatementDescription
+		selectByShortURLID  *pgconn.StatementDescription
+		selectByUID         *pgconn.StatementDescription
+		selectMaxID         *pgconn.StatementDescription
 	}
 }
 
@@ -70,12 +71,15 @@ func New(ctx context.Context) (*Storage, error) {
 var _ storages.Storager = (*Storage)(nil)
 
 func (s *Storage) Add(ctx context.Context, shortURLID, originalURL string) error {
-	if s.IsShortURLIDExist(ctx, shortURLID) {
-		return storages.ErrShortURLIDAlreadyExists
-	}
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 	if _, err := s.db.Exec(ctx, s.stmts.insertInto.Name, helpers.GetUIDFromCtx(ctx), shortURLID, originalURL); err != nil {
+		var pgerr *pgconn.PgError
+		if errors.As(err, &pgerr) {
+			if pgerrcode.IsIntegrityConstraintViolation(pgerr.SQLState()) {
+				return storages.ErrRowAlreadyExists
+			}
+		}
 		return err
 	}
 	return nil
@@ -141,6 +145,19 @@ func (s *Storage) GetByShortURLID(ctx context.Context, shortURLID string) (strin
 	return originalURL, nil
 }
 
+func (s *Storage) GetByOriginalURL(ctx context.Context, originalURL string) (string, error) {
+	var shortURLID string
+	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
+	defer cancel()
+	if err := s.db.QueryRow(ctx, s.stmts.selectByOriginalURL.Name, originalURL).Scan(&shortURLID); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", storages.ErrOriginalURLNotExists
+		}
+		return "", err
+	}
+	return shortURLID, nil
+}
+
 func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenList, error) {
 	var shortenList []models.ShortenList
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
@@ -162,22 +179,12 @@ func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenList, error) {
 	return shortenList, nil
 }
 
-func (s *Storage) IsShortURLIDExist(ctx context.Context, shortURLID string) bool {
-	var isExist bool
-	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
-	defer cancel()
-	if err := s.db.QueryRow(ctx, s.stmts.selectExistsShortURLID.Name, shortURLID).Scan(&isExist); err != nil {
-		log.Fatal(err)
-	}
-	return isExist
-}
-
 func (s *Storage) NextID(ctx context.Context) int {
 	var currentID sql.NullInt64
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 	if err := s.db.QueryRow(ctx, s.stmts.selectMaxID.Name).Scan(&currentID); err != nil {
-		log.Fatal(err)
+		zap.L().Fatal(err.Error())
 	}
 	if !currentID.Valid {
 		return 0
@@ -221,12 +228,12 @@ func (s *Storage) setStatements(ctx context.Context) error {
 		switch file.Name() {
 		case "insert_into.sql":
 			s.stmts.insertInto = stmt
+		case "select_by_original_url.sql":
+			s.stmts.selectByOriginalURL = stmt
 		case "select_by_short_url_id.sql":
 			s.stmts.selectByShortURLID = stmt
 		case "select_by_uid.sql":
 			s.stmts.selectByUID = stmt
-		case "select_exists_short_url_id.sql":
-			s.stmts.selectExistsShortURLID = stmt
 		case "select_max_id.sql":
 			s.stmts.selectMaxID = stmt
 		}
