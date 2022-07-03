@@ -27,6 +27,7 @@ func New(ctx context.Context) chi.Router {
 
 	r.Route("/api", func(r chi.Router) {
 		r.Post("/shorten", handlers.APIShortenURL(svc))
+		r.Post("/shorten/batch", handlers.APIShortenBatch(svc))
 		r.Get("/user/urls", handlers.APIGetURLsByUID(svc))
 	})
 

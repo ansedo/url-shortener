@@ -7,10 +7,11 @@ import (
 
 // Storager is the common interface implemented by all storages.
 type Storager interface {
-	Add(ctx context.Context, shortURL, originalURL string) error
-	GetByShortURL(ctx context.Context, shortURL string) (string, error)
-	GetByUID(ctx context.Context) ([]models.ShortenListResponse, error)
-	IsShortURLExist(ctx context.Context, shortURL string) bool
+	Add(ctx context.Context, shortURLID, originalURL string) error
+	AddBatch(ctx context.Context, urls []models.ShortenList) error
+	GetByShortURLID(ctx context.Context, shortURLID string) (string, error)
+	GetByUID(ctx context.Context) ([]models.ShortenList, error)
+	IsShortURLIDExist(ctx context.Context, shortURLID string) bool
 	NextID(ctx context.Context) int
 	Ping(ctx context.Context) error
 }

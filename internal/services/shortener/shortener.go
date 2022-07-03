@@ -14,6 +14,7 @@ const (
 
 type Shortener struct {
 	Storage storages.Storager
+	NextID  int
 }
 
 func New(ctx context.Context, opts ...Option) *Shortener {
@@ -35,10 +36,12 @@ func New(ctx context.Context, opts ...Option) *Shortener {
 		WithDefaultStorage(ctx)(s)
 	}
 
+	s.NextID = s.Storage.NextID(ctx)
+
 	return s
 }
 
-func (s *Shortener) GenerateID(ctx context.Context) (string, error) {
+func (s *Shortener) GenerateID(_ context.Context) (string, error) {
 	d := hashids.NewData()
 	d.Salt = hashSalt
 	d.MinLength = hashLength
@@ -47,10 +50,11 @@ func (s *Shortener) GenerateID(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	id, err := h.Encode([]int{s.Storage.NextID(ctx)})
+	id, err := h.Encode([]int{s.NextID})
 	if err != nil {
 		return "", err
 	}
+	s.NextID++
 
 	return id, nil
 }

@@ -16,18 +16,17 @@ func GetOriginalURL(s *shortener.Shortener) http.HandlerFunc {
 			return
 		}
 
-		storageURL, err := s.Storage.GetByShortURL(r.Context(), id)
+		originalURL, err := s.Storage.GetByShortURLID(r.Context(), id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		validURL, err := url.ParseRequestURI(storageURL)
-		if err != nil {
+		if _, err = url.ParseRequestURI(originalURL); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		http.Redirect(w, r, validURL.String(), http.StatusTemporaryRedirect)
+		http.Redirect(w, r, originalURL, http.StatusTemporaryRedirect)
 	}
 }

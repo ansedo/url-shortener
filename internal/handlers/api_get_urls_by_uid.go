@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/models"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
 	"net/http"
@@ -13,19 +14,24 @@ func APIGetURLsByUID(s *shortener.Shortener) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.Header().Add("X-Content-Type-Options", "nosniff")
 
-		entities, err := s.Storage.GetByUID(r.Context())
+		shortenList, err := s.Storage.GetByUID(r.Context())
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(models.ShortenResponse{Error: err.Error()})
 			return
 		}
 
-		if len(entities) == 0 {
+		if len(shortenList) == 0 {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
-		resp, err := json.Marshal(&entities)
+		for i := range shortenList {
+			shortenList[i].ShortURL = config.Get().BaseURL + "/" + shortenList[i].ShortURLID
+			shortenList[i].ShortURLID = ""
+		}
+
+		resp, err := json.Marshal(&shortenList)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(models.ShortenResponse{Error: err.Error()})

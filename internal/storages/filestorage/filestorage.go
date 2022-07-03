@@ -17,7 +17,7 @@ type Storage struct {
 
 type Record struct {
 	UID         string `json:"uid"`
-	ShortURL    string `json:"short_url"`
+	ShortURLID  string `json:"short_url_id"`
 	OriginalURL string `json:"original_url"`
 }
 
@@ -29,15 +29,15 @@ func New(_ context.Context) *Storage {
 
 var _ storages.Storager = (*Storage)(nil)
 
-func (s *Storage) Add(ctx context.Context, shortURL, originalURL string) error {
-	if s.IsShortURLExist(ctx, shortURL) {
-		return storages.ErrShortURLAlreadyExists
+func (s *Storage) Add(ctx context.Context, shortURLID, originalURL string) error {
+	if s.IsShortURLIDExist(ctx, shortURLID) {
+		return storages.ErrShortURLIDAlreadyExists
 	}
 	producer := helpers.Must(NewProducer(s.fileName))
 	defer producer.Close()
 	err := producer.WriteRecord(&Record{
 		UID:         helpers.GetUIDFromCtx(ctx),
-		ShortURL:    shortURL,
+		ShortURLID:  shortURLID,
 		OriginalURL: originalURL,
 	})
 	if err != nil {
@@ -46,7 +46,16 @@ func (s *Storage) Add(ctx context.Context, shortURL, originalURL string) error {
 	return nil
 }
 
-func (s *Storage) GetByShortURL(_ context.Context, shortURL string) (string, error) {
+func (s *Storage) AddBatch(ctx context.Context, urls []models.ShortenList) error {
+	for _, url := range urls {
+		if err := s.Add(ctx, url.ShortURLID, url.OriginalURL); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Storage) GetByShortURLID(_ context.Context, shortURLID string) (string, error) {
 	consumer := helpers.Must(NewConsumer(s.fileName))
 	defer consumer.Close()
 	for {
@@ -57,15 +66,15 @@ func (s *Storage) GetByShortURL(_ context.Context, shortURL string) (string, err
 		if err != nil {
 			return "", err
 		}
-		if record.ShortURL == shortURL {
+		if record.ShortURLID == shortURLID {
 			return record.OriginalURL, nil
 		}
 	}
-	return "", storages.ErrShortURLNotExist
+	return "", storages.ErrShortURLIDNotExist
 }
 
-func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenListResponse, error) {
-	entities := make([]models.ShortenListResponse, 0)
+func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenList, error) {
+	entities := make([]models.ShortenList, 0)
 	uid := helpers.GetUIDFromCtx(ctx)
 	consumer := helpers.Must(NewConsumer(s.fileName))
 	defer consumer.Close()
@@ -80,8 +89,8 @@ func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenListResponse, e
 		if record.UID == uid {
 			entities = append(
 				entities,
-				models.ShortenListResponse{
-					ShortURL:    record.ShortURL,
+				models.ShortenList{
+					ShortURLID:  record.ShortURLID,
 					OriginalURL: record.OriginalURL,
 				})
 		}
@@ -89,7 +98,7 @@ func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenListResponse, e
 	return entities, nil
 }
 
-func (s *Storage) IsShortURLExist(_ context.Context, shortURL string) bool {
+func (s *Storage) IsShortURLIDExist(_ context.Context, shortURLID string) bool {
 	consumer := helpers.Must(NewConsumer(s.fileName))
 	defer consumer.Close()
 	for {
@@ -100,7 +109,7 @@ func (s *Storage) IsShortURLExist(_ context.Context, shortURL string) bool {
 		if err != nil {
 			log.Fatal(err)
 		}
-		if record.ShortURL == shortURL {
+		if record.ShortURLID == shortURLID {
 			return true
 		}
 	}

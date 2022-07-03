@@ -1,1 +1,1 @@
-SELECT short_url, original_url FROM urls WHERE uid=$1
+SELECT short_url_id, original_url FROM urls WHERE uid=$1

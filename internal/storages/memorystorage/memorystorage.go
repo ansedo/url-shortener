@@ -2,7 +2,6 @@ package memorystorage
 
 import (
 	"context"
-	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/helpers"
 	"github.com/ansedo/url-shortener/internal/models"
 	"github.com/ansedo/url-shortener/internal/storages"
@@ -27,50 +26,59 @@ func New(_ context.Context) *Storage {
 
 var _ storages.Storager = (*Storage)(nil)
 
-func (s *Storage) Add(ctx context.Context, shortURL, originalURL string) error {
-	if s.IsShortURLExist(ctx, shortURL) {
-		return storages.ErrShortURLAlreadyExists
+func (s *Storage) Add(ctx context.Context, shortURLID, originalURL string) error {
+	if s.IsShortURLIDExist(ctx, shortURLID) {
+		return storages.ErrShortURLIDAlreadyExists
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.repo[shortURL] = row{
+	s.repo[shortURLID] = row{
 		UID:         helpers.GetUIDFromCtx(ctx),
 		OriginalURL: originalURL,
 	}
 	return nil
 }
 
-func (s *Storage) GetByShortURL(ctx context.Context, shortURL string) (string, error) {
-	if !s.IsShortURLExist(ctx, shortURL) {
-		return "", storages.ErrShortURLNotExist
+func (s *Storage) AddBatch(ctx context.Context, urls []models.ShortenList) error {
+	for _, url := range urls {
+		if err := s.Add(ctx, url.ShortURLID, url.OriginalURL); err != nil {
+			return err
+		}
 	}
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.repo[shortURL].OriginalURL, nil
+	return nil
 }
 
-func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenListResponse, error) {
-	entities := make([]models.ShortenListResponse, 0)
+func (s *Storage) GetByShortURLID(ctx context.Context, shortURLID string) (string, error) {
+	if !s.IsShortURLIDExist(ctx, shortURLID) {
+		return "", storages.ErrShortURLIDNotExist
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.repo[shortURLID].OriginalURL, nil
+}
+
+func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenList, error) {
+	var shortenList []models.ShortenList
 	uid := helpers.GetUIDFromCtx(ctx)
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	for shortURL, row := range s.repo {
+	for shortURLID, row := range s.repo {
 		if row.UID == uid {
-			entities = append(
-				entities,
-				models.ShortenListResponse{
-					ShortURL:    config.Get().BaseURL + "/" + shortURL,
+			shortenList = append(
+				shortenList,
+				models.ShortenList{
+					ShortURLID:  shortURLID,
 					OriginalURL: row.OriginalURL,
 				})
 		}
 	}
-	return entities, nil
+	return shortenList, nil
 }
 
-func (s *Storage) IsShortURLExist(_ context.Context, shortURL string) bool {
+func (s *Storage) IsShortURLIDExist(_ context.Context, shortURLID string) bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	_, ok := s.repo[shortURL]
+	_, ok := s.repo[shortURLID]
 	return ok
 }
 

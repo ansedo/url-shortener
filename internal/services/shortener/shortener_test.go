@@ -28,11 +28,11 @@ func TestShortener(t *testing.T) {
 	_, err = svc.GenerateID(ctx)
 	require.NoError(t, err)
 
-	firstValue, err := svc.Storage.GetByShortURL(ctx, firstID)
+	firstValue, err := svc.Storage.GetByShortURLID(ctx, firstID)
 	require.NoError(t, err)
 	assert.Equal(t, firstValue, data[0])
 
-	secondValue, err := svc.Storage.GetByShortURL(ctx, secondID)
+	secondValue, err := svc.Storage.GetByShortURLID(ctx, secondID)
 	require.NoError(t, err)
 	assert.Equal(t, secondValue, data[1])
 }
