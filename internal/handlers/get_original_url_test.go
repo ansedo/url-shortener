@@ -81,8 +81,8 @@ func TestGetOriginalURL(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 
-			_, err = io.ReadAll(resp.Body)
 			defer resp.Body.Close()
+			_, err = io.ReadAll(resp.Body)
 			assert.NoError(t, err)
 
 			if tt.want.location != "" {

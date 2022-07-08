@@ -38,8 +38,8 @@ func TestAPIGetURLsByUIDFetchURLs(t *testing.T) {
 		resp, err := c.Get(s.URL + "/api/user/urls")
 		require.NoError(t, err)
 
-		body, err := io.ReadAll(resp.Body)
 		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 		assert.Contains(t, string(body), urls[0])
 		assert.Contains(t, string(body), config.Get().BaseURL)
@@ -57,8 +57,8 @@ func TestAPIGetURLsByUIDFetchURLs(t *testing.T) {
 		resp, err := c.Get(s.URL + "/api/user/urls")
 		require.NoError(t, err)
 
-		body, err := io.ReadAll(resp.Body)
 		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 		assert.Contains(t, string(body), urls[0])
 		assert.Contains(t, string(body), urls[1])
@@ -76,8 +76,8 @@ func TestAPIGetURLsByUIDFetchEmptyURLs(t *testing.T) {
 		resp, err := c.Get(s.URL + "/api/user/urls")
 		require.NoError(t, err)
 
-		_, err = io.ReadAll(resp.Body)
 		defer resp.Body.Close()
+		_, err = io.ReadAll(resp.Body)
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 	})

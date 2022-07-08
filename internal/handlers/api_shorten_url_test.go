@@ -76,8 +76,8 @@ func TestAPIShortenURL(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 
-			body, err := io.ReadAll(resp.Body)
 			defer resp.Body.Close()
+			body, err := io.ReadAll(resp.Body)
 			require.NoError(t, err)
 			assert.JSONEq(t, tt.want.body, strings.TrimSpace(string(body)))
 		})
