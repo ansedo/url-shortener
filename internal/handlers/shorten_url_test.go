@@ -2,7 +2,6 @@ package handlers_test
 
 import (
 	"context"
-	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/handlers"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
 	"github.com/go-chi/chi/v5"
@@ -22,8 +21,9 @@ func TestShortenURL(t *testing.T) {
 		location   string
 	}
 
+	svc := shortener.New(context.Background())
 	r := chi.NewRouter()
-	r.Post("/", handlers.ShortenURL(shortener.New(context.Background())))
+	r.Post("/", handlers.ShortenURL(svc))
 
 	tests := []struct {
 		name string
@@ -37,7 +37,7 @@ func TestShortenURL(t *testing.T) {
 			body: "https://ya.ru",
 			want: want{
 				statusCode: http.StatusCreated,
-				body:       config.Get().BaseURL + "/VRb8948o",
+				body:       svc.BaseURL + "/VRb8948o",
 			},
 		},
 		{
@@ -64,7 +64,7 @@ func TestShortenURL(t *testing.T) {
 			body: "https://google.com",
 			want: want{
 				statusCode: http.StatusCreated,
-				body:       config.Get().BaseURL + "/65lvAYxL",
+				body:       svc.BaseURL + "/65lvAYxL",
 			},
 		},
 	}

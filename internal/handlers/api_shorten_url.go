@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/models"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
 	"github.com/ansedo/url-shortener/internal/storages"
@@ -50,7 +49,7 @@ func APIShortenURL(s *shortener.Shortener) http.HandlerFunc {
 			if errors.Is(err, storages.ErrRowAlreadyExists) {
 				if existsShortURLID, err := s.Storage.GetByOriginalURL(r.Context(), req.URL); err == nil {
 					w.WriteHeader(http.StatusConflict)
-					json.NewEncoder(w).Encode(models.ShortenResponse{Result: config.Get().BaseURL + "/" + existsShortURLID})
+					json.NewEncoder(w).Encode(models.ShortenResponse{Result: s.BaseURL + "/" + existsShortURLID})
 					return
 				}
 			}
@@ -59,7 +58,7 @@ func APIShortenURL(s *shortener.Shortener) http.HandlerFunc {
 			return
 		}
 
-		resp, err := json.Marshal(&models.ShortenResponse{Result: config.Get().BaseURL + "/" + shortURLID})
+		resp, err := json.Marshal(&models.ShortenResponse{Result: s.BaseURL + "/" + shortURLID})
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(models.ShortenResponse{Error: err.Error()})

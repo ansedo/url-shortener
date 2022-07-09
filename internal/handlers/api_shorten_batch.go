@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/models"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
 	"io"
@@ -46,7 +45,7 @@ func APIShortenBatch(s *shortener.Shortener) http.HandlerFunc {
 			}
 
 			shortenList[i].ShortURLID = shortURLID
-			shortenList[i].ShortURL = config.Get().BaseURL + "/" + shortenList[i].ShortURLID
+			shortenList[i].ShortURL = s.BaseURL + "/" + shortenList[i].ShortURLID
 		}
 
 		if err = s.Storage.AddBatch(r.Context(), shortenList); err != nil {

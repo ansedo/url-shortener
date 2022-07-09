@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/models"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
 	"net/http"
@@ -27,7 +26,7 @@ func APIGetURLsByUID(s *shortener.Shortener) http.HandlerFunc {
 		}
 
 		for i := range shortenList {
-			shortenList[i].ShortURL = config.Get().BaseURL + "/" + shortenList[i].ShortURLID
+			shortenList[i].ShortURL = s.BaseURL + "/" + shortenList[i].ShortURLID
 			shortenList[i].ShortURLID = ""
 		}
 

@@ -14,11 +14,14 @@ const (
 
 type Shortener struct {
 	Storage storages.Storager
+	BaseURL string
 	NextID  int
 }
 
 func New(ctx context.Context, opts ...Option) *Shortener {
-	s := &Shortener{}
+	s := &Shortener{
+		BaseURL: config.Get().BaseURL,
+	}
 
 	for _, opt := range opts {
 		opt(s)

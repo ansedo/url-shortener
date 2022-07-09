@@ -2,7 +2,6 @@ package handlers_test
 
 import (
 	"context"
-	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/handlers"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
 	"github.com/go-chi/chi/v5"
@@ -42,7 +41,7 @@ func TestAPIGetURLsByUIDFetchURLs(t *testing.T) {
 		body, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 		assert.Contains(t, string(body), urls[0])
-		assert.Contains(t, string(body), config.Get().BaseURL)
+		assert.Contains(t, string(body), svc.BaseURL)
 	})
 
 	t.Run("shorten second url", func(t *testing.T) {
@@ -62,7 +61,7 @@ func TestAPIGetURLsByUIDFetchURLs(t *testing.T) {
 		require.NoError(t, err)
 		assert.Contains(t, string(body), urls[0])
 		assert.Contains(t, string(body), urls[1])
-		assert.Contains(t, string(body), config.Get().BaseURL)
+		assert.Contains(t, string(body), svc.BaseURL)
 	})
 }
 
