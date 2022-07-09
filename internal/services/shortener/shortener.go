@@ -39,7 +39,7 @@ func New(ctx context.Context, opts ...Option) *Shortener {
 		WithDefaultStorage(ctx)(s)
 	}
 
-	s.NextID = s.Storage.NextID(ctx)
+	s.NextID = s.Storage.GetNextID(ctx)
 
 	return s
 }

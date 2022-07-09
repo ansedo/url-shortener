@@ -179,7 +179,7 @@ func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenList, error) {
 	return shortenList, nil
 }
 
-func (s *Storage) NextID(ctx context.Context) int {
+func (s *Storage) GetNextID(ctx context.Context) int {
 	var currentID sql.NullInt64
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()

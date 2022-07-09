@@ -98,7 +98,7 @@ func (s *Storage) IsDuplicate(ctx context.Context, shortURLID, originalURL strin
 	return false
 }
 
-func (s *Storage) NextID(_ context.Context) int {
+func (s *Storage) GetNextID(_ context.Context) int {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return len(s.repo)

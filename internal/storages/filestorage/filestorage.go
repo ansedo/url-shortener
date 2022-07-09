@@ -134,7 +134,7 @@ func (s *Storage) IsDuplicate(_ context.Context, shortURLID, originalURL string)
 	return false
 }
 
-func (s *Storage) NextID(_ context.Context) int {
+func (s *Storage) GetNextID(_ context.Context) int {
 	consumer := helpers.Must(NewConsumer(s.fileName))
 	defer consumer.Close()
 	var nextID int
