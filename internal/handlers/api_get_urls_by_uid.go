@@ -34,6 +34,7 @@ func APIGetURLsByUID(s *shortener.Shortener) http.HandlerFunc {
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(models.ShortenResponse{Error: err.Error()})
+			return
 		}
 
 		if _, err = fmt.Fprint(w, string(resp)); err != nil {
