@@ -7,7 +7,7 @@ import (
 	"net/url"
 )
 
-func DecodeURL(s *shortener.Shortener) http.HandlerFunc {
+func GetOriginalURL(s *shortener.Shortener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
 
@@ -16,18 +16,17 @@ func DecodeURL(s *shortener.Shortener) http.HandlerFunc {
 			return
 		}
 
-		storageURL, err := s.Storage.Get(id)
+		originalURL, err := s.Storage.GetByShortURLID(r.Context(), id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		validURL, err := url.ParseRequestURI(storageURL)
-		if err != nil {
+		if _, err = url.ParseRequestURI(originalURL); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		http.Redirect(w, r, validURL.String(), http.StatusTemporaryRedirect)
+		http.Redirect(w, r, originalURL, http.StatusTemporaryRedirect)
 	}
 }

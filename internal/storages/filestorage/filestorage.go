@@ -1,12 +1,14 @@
 package filestorage
 
 import (
+	"context"
 	"errors"
 	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/helpers"
+	"github.com/ansedo/url-shortener/internal/models"
 	"github.com/ansedo/url-shortener/internal/storages"
+	"go.uber.org/zap"
 	"io"
-	"log"
 )
 
 type Storage struct {
@@ -14,17 +16,46 @@ type Storage struct {
 }
 
 type Record struct {
-	ID  string `json:"id"`
-	URL string `json:"url"`
+	UID         string `json:"uid"`
+	ShortURLID  string `json:"short_url_id"`
+	OriginalURL string `json:"original_url"`
 }
 
-func New() *Storage {
+func New(_ context.Context) *Storage {
 	return &Storage{
 		fileName: config.Get().FileStoragePath,
 	}
 }
 
-func (s *Storage) Get(key string) (string, error) {
+var _ storages.Storager = (*Storage)(nil)
+
+func (s *Storage) Add(ctx context.Context, shortURLID, originalURL string) error {
+	if s.IsDuplicate(ctx, shortURLID, originalURL) {
+		return storages.ErrRowAlreadyExists
+	}
+	producer := helpers.Must(NewProducer(s.fileName))
+	defer producer.Close()
+	err := producer.WriteRecord(&Record{
+		UID:         helpers.GetUIDFromCtx(ctx),
+		ShortURLID:  shortURLID,
+		OriginalURL: originalURL,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Storage) AddBatch(ctx context.Context, urls []models.ShortenList) error {
+	for _, url := range urls {
+		if err := s.Add(ctx, url.ShortURLID, url.OriginalURL); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Storage) GetByShortURLID(_ context.Context, shortURLID string) (string, error) {
 	consumer := helpers.Must(NewConsumer(s.fileName))
 	defer consumer.Close()
 	for {
@@ -35,27 +66,14 @@ func (s *Storage) Get(key string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		if record.ID == key {
-			return record.URL, nil
+		if record.ShortURLID == shortURLID {
+			return record.OriginalURL, nil
 		}
 	}
-	return "", storages.ErrKeyNotExist
+	return "", storages.ErrShortURLIDNotExist
 }
 
-func (s *Storage) Set(key, value string) error {
-	if s.Has(key) {
-		return storages.ErrKeyAlreadyExists
-	}
-	producer := helpers.Must(NewProducer(s.fileName))
-	defer producer.Close()
-	err := producer.WriteRecord(&Record{ID: key, URL: value})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *Storage) Has(key string) bool {
+func (s *Storage) GetByOriginalURL(_ context.Context, originalURL string) (string, error) {
 	consumer := helpers.Must(NewConsumer(s.fileName))
 	defer consumer.Close()
 	for {
@@ -64,16 +82,59 @@ func (s *Storage) Has(key string) bool {
 			break
 		}
 		if err != nil {
-			log.Fatal(err)
+			return "", err
 		}
-		if record.ID == key {
-			return true
+		if record.ShortURLID == originalURL {
+			return record.ShortURLID, nil
+		}
+	}
+	return "", storages.ErrOriginalURLNotExists
+}
+
+func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenList, error) {
+	entities := make([]models.ShortenList, 0)
+	uid := helpers.GetUIDFromCtx(ctx)
+	consumer := helpers.Must(NewConsumer(s.fileName))
+	defer consumer.Close()
+	for {
+		record, err := consumer.ReadRecord()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		if record.UID == uid {
+			entities = append(
+				entities,
+				models.ShortenList{
+					ShortURLID:  record.ShortURLID,
+					OriginalURL: record.OriginalURL,
+				})
+		}
+	}
+	return entities, nil
+}
+
+func (s *Storage) IsDuplicate(_ context.Context, shortURLID, originalURL string) bool {
+	consumer := helpers.Must(NewConsumer(s.fileName))
+	defer consumer.Close()
+	for {
+		record, err := consumer.ReadRecord()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			zap.L().Fatal(err.Error())
+		}
+		if record.ShortURLID == shortURLID || record.OriginalURL == originalURL {
+			return false
 		}
 	}
 	return false
 }
 
-func (s *Storage) NextID() int {
+func (s *Storage) GetNextID(_ context.Context) int {
 	consumer := helpers.Must(NewConsumer(s.fileName))
 	defer consumer.Close()
 	var nextID int
@@ -82,10 +143,13 @@ func (s *Storage) NextID() int {
 			if errors.Is(err, io.EOF) {
 				break
 			}
-			log.Fatal(err)
+			zap.L().Fatal(err.Error())
 		}
 		nextID++
 	}
-	log.Println(nextID)
 	return nextID + 1
+}
+
+func (s *Storage) Ping(_ context.Context) error {
+	return nil
 }

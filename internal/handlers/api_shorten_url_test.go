@@ -1,8 +1,8 @@
 package handlers_test
 
 import (
+	"context"
 	"fmt"
-	"github.com/ansedo/url-shortener/internal/config"
 	"github.com/ansedo/url-shortener/internal/handlers"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
 	"github.com/go-chi/chi/v5"
@@ -15,12 +15,13 @@ import (
 	"testing"
 )
 
-func TestEncodeURLFromJSON(t *testing.T) {
+func TestAPIShortenURL(t *testing.T) {
 	type want struct {
 		statusCode int
 		body       string
 	}
 
+	svc := shortener.New(context.Background())
 	tests := []struct {
 		name string
 		body string
@@ -31,7 +32,7 @@ func TestEncodeURLFromJSON(t *testing.T) {
 			body: `{"url":"https://ya.ru"}`,
 			want: want{
 				statusCode: http.StatusCreated,
-				body:       fmt.Sprintf(`{"result":"%s/VRb8948o"}`, config.Get().BaseURL),
+				body:       fmt.Sprintf(`{"result":"%s/VRb8948o"}`, svc.BaseURL),
 			},
 		},
 		{
@@ -55,13 +56,13 @@ func TestEncodeURLFromJSON(t *testing.T) {
 			body: `{"url":"https://google.com"}`,
 			want: want{
 				statusCode: http.StatusCreated,
-				body:       fmt.Sprintf(`{"result":"%s/65lvAYxL"}`, config.Get().BaseURL),
+				body:       fmt.Sprintf(`{"result":"%s/65lvAYxL"}`, svc.BaseURL),
 			},
 		},
 	}
 
 	r := chi.NewRouter()
-	r.Post("/", handlers.EncodeURLFromJSON(shortener.New()))
+	r.Post("/", handlers.APIShortenURL(shortener.New(context.Background())))
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -75,8 +76,8 @@ func TestEncodeURLFromJSON(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 
-			body, err := io.ReadAll(resp.Body)
 			defer resp.Body.Close()
+			body, err := io.ReadAll(resp.Body)
 			require.NoError(t, err)
 			assert.JSONEq(t, tt.want.body, strings.TrimSpace(string(body)))
 		})

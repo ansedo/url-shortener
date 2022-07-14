@@ -1,7 +1,7 @@
 package handlers_test
 
 import (
-	"github.com/ansedo/url-shortener/internal/config"
+	"context"
 	"github.com/ansedo/url-shortener/internal/handlers"
 	"github.com/ansedo/url-shortener/internal/services/shortener"
 	"github.com/go-chi/chi/v5"
@@ -14,15 +14,16 @@ import (
 	"testing"
 )
 
-func TestEncodeURL(t *testing.T) {
+func TestShortenURL(t *testing.T) {
 	type want struct {
 		statusCode int
 		body       string
 		location   string
 	}
 
+	svc := shortener.New(context.Background())
 	r := chi.NewRouter()
-	r.Post("/", handlers.EncodeURL(shortener.New()))
+	r.Post("/", handlers.ShortenURL(svc))
 
 	tests := []struct {
 		name string
@@ -36,7 +37,7 @@ func TestEncodeURL(t *testing.T) {
 			body: "https://ya.ru",
 			want: want{
 				statusCode: http.StatusCreated,
-				body:       config.Get().BaseURL + "/VRb8948o",
+				body:       svc.BaseURL + "/VRb8948o",
 			},
 		},
 		{
@@ -63,7 +64,7 @@ func TestEncodeURL(t *testing.T) {
 			body: "https://google.com",
 			want: want{
 				statusCode: http.StatusCreated,
-				body:       config.Get().BaseURL + "/65lvAYxL",
+				body:       svc.BaseURL + "/65lvAYxL",
 			},
 		},
 	}
@@ -85,8 +86,8 @@ func TestEncodeURL(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 
-			body, err := io.ReadAll(resp.Body)
 			defer resp.Body.Close()
+			body, err := io.ReadAll(resp.Body)
 			require.NoError(t, err)
 
 			assert.Equal(t, tt.want.body, strings.TrimSpace(string(body)))
