@@ -2,6 +2,7 @@ package shutdowner
 
 import (
 	"context"
+	"go.uber.org/zap"
 	"os"
 	"os/signal"
 	"sync"
@@ -103,6 +104,7 @@ func (s *shutdowner) catchSignalsAndShutdown() {
 		close(s.ChShutdowned)
 		return
 	case <-time.After(2 * gracefulShutdownDelay):
+		zap.L().Warn("no response while graceful shutdown: exit with error")
 		os.Exit(int(syscall.SIGTERM))
 	}
 }

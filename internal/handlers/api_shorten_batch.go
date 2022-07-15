@@ -23,7 +23,7 @@ func APIShortenBatch(s *shortener.Shortener) http.HandlerFunc {
 			return
 		}
 
-		var shortenList []models.ShortenList
+		var shortenList []models.ShortenLink
 		if err = json.Unmarshal(body, &shortenList); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(models.ShortenResponse{Error: err.Error()})

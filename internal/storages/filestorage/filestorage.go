@@ -19,6 +19,7 @@ type Record struct {
 	UID         string `json:"uid"`
 	ShortURLID  string `json:"short_url_id"`
 	OriginalURL string `json:"original_url"`
+	IsDeleted   bool   `json:"is_deleted"`
 }
 
 func New(_ context.Context) *Storage {
@@ -46,13 +47,55 @@ func (s *Storage) Add(ctx context.Context, shortURLID, originalURL string) error
 	return nil
 }
 
-func (s *Storage) AddBatch(ctx context.Context, urls []models.ShortenList) error {
+func (s *Storage) AddBatch(ctx context.Context, urls []models.ShortenLink) error {
 	for _, url := range urls {
 		if err := s.Add(ctx, url.ShortURLID, url.OriginalURL); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func (s *Storage) AsyncSoftDeleteBatch(ctx context.Context, urls []models.ShortenLink) {
+	s.SoftDeleteBatch(ctx, urls)
+}
+
+func (s *Storage) SoftDeleteBatch(ctx context.Context, urls []models.ShortenLink) {
+	repo := make(map[string]Record)
+	consumer := helpers.Must(NewConsumer(s.fileName))
+	defer consumer.Close()
+	for {
+		record, err := consumer.ReadRecord()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			zap.L().Warn(err.Error(),
+				zap.String("method", "SoftDeleteBatch"),
+			)
+			break
+		}
+		repo[record.ShortURLID] = *record
+	}
+
+	for _, url := range urls {
+		record, ok := repo[url.ShortURLID]
+		if !ok {
+			continue
+		}
+		if repo[url.ShortURLID].UID == url.UID {
+			record.IsDeleted = true
+			repo[url.ShortURLID] = record
+		}
+	}
+
+	for _, record := range repo {
+		if err := s.Add(ctx, record.ShortURLID, record.OriginalURL); err != nil {
+			zap.L().Warn(err.Error(),
+				zap.String("method", "SoftDeleteBatch"),
+			)
+		}
+	}
 }
 
 func (s *Storage) GetByShortURLID(_ context.Context, shortURLID string) (string, error) {
@@ -67,6 +110,9 @@ func (s *Storage) GetByShortURLID(_ context.Context, shortURLID string) (string,
 			return "", err
 		}
 		if record.ShortURLID == shortURLID {
+			if record.IsDeleted {
+				return record.OriginalURL, storages.ErrRowSoftDeleted
+			}
 			return record.OriginalURL, nil
 		}
 	}
@@ -91,8 +137,8 @@ func (s *Storage) GetByOriginalURL(_ context.Context, originalURL string) (strin
 	return "", storages.ErrOriginalURLNotExists
 }
 
-func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenList, error) {
-	entities := make([]models.ShortenList, 0)
+func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenLink, error) {
+	entities := make([]models.ShortenLink, 0)
 	uid := helpers.GetUIDFromCtx(ctx)
 	consumer := helpers.Must(NewConsumer(s.fileName))
 	defer consumer.Close()
@@ -107,7 +153,7 @@ func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenList, error) {
 		if record.UID == uid {
 			entities = append(
 				entities,
-				models.ShortenList{
+				models.ShortenLink{
 					ShortURLID:  record.ShortURLID,
 					OriginalURL: record.OriginalURL,
 				})
