@@ -26,9 +26,14 @@ func New(ctx context.Context) chi.Router {
 	r.Get("/ping", handlers.PingStorage(svc))
 
 	r.Route("/api", func(r chi.Router) {
-		r.Post("/shorten", handlers.APIShortenURL(svc))
-		r.Post("/shorten/batch", handlers.APIShortenBatch(svc))
-		r.Get("/user/urls", handlers.APIGetURLsByUID(svc))
+		r.Route("/shorten", func(r chi.Router) {
+			r.Post("/", handlers.APIShortenURL(svc))
+			r.Post("/batch", handlers.APIShortenBatch(svc))
+		})
+		r.Route("/user/urls", func(r chi.Router) {
+			r.Get("/", handlers.APIGetURLsByUID(svc))
+			r.Delete("/", handlers.APISoftDeleteBatchURLs(svc))
+		})
 	})
 
 	return r

@@ -11,6 +11,7 @@ import (
 type row struct {
 	UID         string
 	OriginalURL string
+	IsDeleted   bool
 }
 
 type Storage struct {
@@ -39,7 +40,7 @@ func (s *Storage) Add(ctx context.Context, shortURLID, originalURL string) error
 	return nil
 }
 
-func (s *Storage) AddBatch(ctx context.Context, urls []models.ShortenList) error {
+func (s *Storage) AddBatch(ctx context.Context, urls []models.ShortenLink) error {
 	for _, url := range urls {
 		if err := s.Add(ctx, url.ShortURLID, url.OriginalURL); err != nil {
 			return err
@@ -48,12 +49,34 @@ func (s *Storage) AddBatch(ctx context.Context, urls []models.ShortenList) error
 	return nil
 }
 
+func (s *Storage) AsyncSoftDeleteBatch(ctx context.Context, urls []models.ShortenLink) {
+	s.SoftDeleteBatch(ctx, urls)
+}
+
+func (s *Storage) SoftDeleteBatch(_ context.Context, urls []models.ShortenLink) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, url := range urls {
+		row, ok := s.repo[url.ShortURLID]
+		if !ok {
+			continue
+		}
+		if s.repo[url.ShortURLID].UID == url.UID {
+			row.IsDeleted = true
+			s.repo[url.ShortURLID] = row
+		}
+	}
+}
+
 func (s *Storage) GetByShortURLID(_ context.Context, shortURLID string) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	row, ok := s.repo[shortURLID]
 	if !ok {
 		return "", storages.ErrShortURLIDNotExist
+	}
+	if row.IsDeleted {
+		return row.OriginalURL, storages.ErrRowSoftDeleted
 	}
 	return row.OriginalURL, nil
 }
@@ -69,8 +92,8 @@ func (s *Storage) GetByOriginalURL(_ context.Context, originalURL string) (strin
 	return "", storages.ErrOriginalURLNotExists
 }
 
-func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenList, error) {
-	var shortenList []models.ShortenList
+func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenLink, error) {
+	var shortenList []models.ShortenLink
 	uid := helpers.GetUIDFromCtx(ctx)
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -78,7 +101,7 @@ func (s *Storage) GetByUID(ctx context.Context) ([]models.ShortenList, error) {
 		if row.UID == uid {
 			shortenList = append(
 				shortenList,
-				models.ShortenList{
+				models.ShortenLink{
 					ShortURLID:  shortURLID,
 					OriginalURL: row.OriginalURL,
 				},
