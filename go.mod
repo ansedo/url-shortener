@@ -11,6 +11,7 @@ require (
 	github.com/jackc/pgx/v4 v4.16.1
 	github.com/speps/go-hashids/v2 v2.0.1
 	github.com/stretchr/testify v1.7.1
+	go.uber.org/zap v1.21.0
 )
 
 require (
@@ -29,8 +30,7 @@ require (
 	github.com/shopspring/decimal v1.3.1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
-	go.uber.org/zap v1.21.0 // indirect
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
